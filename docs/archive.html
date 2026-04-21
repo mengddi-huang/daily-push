@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0d1424">
+<title>每日热梗 · 往期归档</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font: 15px/1.6 -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft Yahei", sans-serif;
+    background: #0d1424;
+    color: #eef1f8;
+    background-image:
+      radial-gradient(800px 400px at -10% -10%, rgba(130,177,255,0.08), transparent 60%),
+      radial-gradient(600px 300px at 110% 0%, rgba(255,184,107,0.06), transparent 60%);
+    min-height: 100vh;
+    padding: 28px 16px 80px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 640px; margin: 0 auto; }
+  a { color: inherit; text-decoration: none; }
+  .brand {
+    display: inline-block;
+    font-size: 11px; letter-spacing: 3px;
+    color: #7d879f; text-transform: uppercase;
+    padding: 4px 10px;
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 20px;
+  }
+  h1 { margin: 14px 0 4px; font-size: 26px; font-weight: 800; }
+  .sub-top { color: #7d879f; font-size: 13px; margin-bottom: 24px; }
+  .back {
+    display: inline-flex; align-items: center; gap: 6px;
+    color: #ffb86b; font-size: 13px;
+    margin-bottom: 20px;
+  }
+  .list {
+    background: rgba(255,255,255,0.035);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+  .arch-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 16px 18px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    transition: background 0.18s ease;
+  }
+  .arch-row:first-child { border-top: none; }
+  a.arch-row:hover { background: rgba(255,255,255,0.06); }
+  .arch-row .main { flex: 1; }
+  .arch-row .title { font-weight: 600; font-size: 15px; }
+  .arch-row .sub { font-size: 12px; color: #7d879f; margin-top: 2px; }
+  .arch-row .chev {
+    color: #7d879f; font-size: 22px; opacity: 0.6;
+    transition: transform 0.18s ease, color 0.18s ease;
+  }
+  a.arch-row:hover .chev { color: #ffb86b; transform: translateX(2px); opacity: 1; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">Daily Digest · Archive</div>
+  <h1>📚 往期归档</h1>
+  <div class="sub-top">共 1 期</div>
+  <a class="back" href="./">← 回到今日</a>
+  <div class="list">
+    <a class="arch-row" href="./2026-04-21.html"><div class="main"><div class="title">2026 年 04 月 21 日</div><div class="sub">星期二</div></div><span class="chev">›</span></a>
+  </div>
+</div>
+</body>
+</html>

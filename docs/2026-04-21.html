@@ -58,15 +58,6 @@
     color: var(--fg-3); font-size: 13px;
     font-family: "SF Mono", "Menlo", monospace;
   }
-  .cover {
-    margin-top: 18px;
-    border-radius: 14px;
-    overflow: hidden;
-    aspect-ratio: 1068/455;
-    background: var(--bg-soft) center/cover no-repeat url('https://cdn.jsdmirror.com/gh/vikiboss/60s-static-host@main/static/images/2026-04-21.png');
-    box-shadow: 0 14px 40px -16px rgba(0,0,0,0.6);
-  }
-
   /* ========== Section ========== */
   section {
     margin-top: 22px;
@@ -190,30 +181,64 @@
     width: 8px; height: 8px;
     border-radius: 50%;
     margin-left: 4px;
+    margin-top: 10px;
+    align-self: flex-start;
   }
   .concert-dot { background: var(--sky); box-shadow: 0 0 10px rgba(130,177,255,0.5); }
   .travel-dot  { background: var(--mint); box-shadow: 0 0 10px rgba(109,218,168,0.5); }
+  .chip {
+    display: inline-block;
+    margin-left: 8px;
+    padding: 1px 8px;
+    border-radius: 999px;
+    background: rgba(130,177,255,0.15);
+    color: var(--sky);
+    font-size: 11px;
+    font-weight: 500;
+    vertical-align: 2px;
+  }
+  .meta { font-size: 12px; color: var(--fg-3); margin-top: 4px; line-height: 1.6; }
+  .meta.sz { color: var(--mint); }
+
+  /* ========== 分类热搜分组 ========== */
+  .cat-group {
+    border-top: 1px solid var(--divider);
+  }
+  .cat-group:first-of-type { border-top: 1px solid var(--divider); }
+  .cat-title {
+    padding: 14px 18px 8px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--fg-2);
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .cat-count {
+    font-family: "SF Mono", "Menlo", monospace;
+    font-size: 11px;
+    color: var(--fg-3);
+    background: rgba(255,255,255,0.05);
+    padding: 1px 8px;
+    border-radius: 999px;
+    font-weight: 500;
+  }
 
   /* ========== 60 秒 ========== */
-  .news-section { margin-top: 22px; }
-  .news-list {
-    list-style: none;
-    margin: 0; padding: 8px 18px 14px;
-  }
-  .news-list li {
-    position: relative;
-    padding: 6px 0 6px 16px;
+  .news-row .news-title {
+    font-weight: 500;
     color: var(--fg-2);
-    font-size: 13px;
-    line-height: 1.75;
+    font-size: 13.5px;
+    line-height: 1.7;
   }
-  .news-list li::before {
-    content: '';
-    position: absolute;
-    left: 0; top: 14px;
+  .news-bullet {
+    flex: 0 0 6px;
     width: 6px; height: 6px;
     background: var(--fg-3);
     border-radius: 50%;
+    align-self: flex-start;
+    margin-top: 10px;
   }
 
   /* ========== Footer ========== */
@@ -233,75 +258,96 @@
 <div class="wrap">
   <header>
     <div class="brand">Daily Digest</div>
-    <h1>今日热梗·生活资讯</h1>
+    <h1>今日热梗 · 生活资讯</h1>
     <div class="date">2026 年 04 月 21 日 · 星期二</div>
-    <div class="cover"></div>
   </header>
 
   <section>
     <div class="sec-head">
-      <h2>🔥 今日热梗</h2>
-      <div class="count">3 条 · 点击查看原帖</div>
+      <h2>🔥 今日热搜</h2>
+      <div class="count">微博 · 抖音 · 小红书 · B 站 · 点击看原帖</div>
     </div>
-    <a class="row meme" href="https://www.douyin.com/search/%E7%88%B1%E5%A5%87%E8%89%BA%E4%B8%96%E7%95%8C%E5%A4%A7%E4%BC%9A%E7%89%87%E5%8D%95" target="_blank" rel="noopener"><span class="rank">01</span><div class="main"><div class="title">爱奇艺世界大会片单</div><div class="sub">抖音热搜</div></div><span class="chev" aria-hidden="true">›</span></a>
-<a class="row meme" href="https://search.bilibili.com/all?keyword=%E5%B1%B1%E6%B2%B3%E8%BF%8E%E5%BF%A0%E9%AD%82" target="_blank" rel="noopener"><span class="rank">02</span><div class="main"><div class="title">山河迎忠魂</div><div class="sub">B 站热搜</div></div><span class="chev" aria-hidden="true">›</span></a>
-<a class="row meme" href="https://www.douyin.com/search/%E9%9B%AA%E9%A5%BC%E7%8C%B4%E8%B6%85%E8%B6%8A%E7%8F%AD%E8%B7%AA%E8%B0%A273%E5%B2%81%E9%AB%98%E9%BE%84%E7%B2%89%E4%B8%9D" target="_blank" rel="noopener"><span class="rank">03</span><div class="main"><div class="title">雪饼猴超越班跪谢73岁高龄粉丝</div><div class="sub">抖音热搜</div></div><span class="chev" aria-hidden="true">›</span></a>
+    <div class="cat-group">  <div class="cat-title">🤖 科技与 AI<span class="cat-count">6</span></div>  <a class="row meme" href="https://s.weibo.com/weibo?q=%E8%8B%B9%E6%9E%9C%E6%96%B0%E4%BB%BBCEO%E7%89%B9%E5%8A%AA%E6%96%AF%E6%98%AF%E8%B0%81" target="_blank" rel="noopener"><span class="rank">01</span><div class="main"><div class="title">苹果新任CEO特努斯是谁</div><div class="sub">微博</div></div><span class="chev" aria-hidden="true">›</span></a><a class="row meme" href="https://s.weibo.com/weibo?q=%E5%BA%93%E5%85%8B%E4%B8%8D%E5%86%8D%E6%8B%85%E4%BB%BB%E8%8B%B9%E6%9E%9CCEO" target="_blank" rel="noopener"><span class="rank">02</span><div class="main"><div class="title">库克不再担任苹果CEO</div><div class="sub">微博</div></div><span class="chev" aria-hidden="true">›</span></a><a class="row meme" href="https://www.douyin.com/search/%E7%89%B9%E7%BA%B3%E6%96%AF%E5%B0%86%E6%8E%A5%E6%9B%BF%E5%BA%93%E5%85%8B%E6%8B%85%E4%BB%BB%E8%8B%B9%E6%9E%9CCEO" target="_blank" rel="noopener"><span class="rank">03</span><div class="main"><div class="title">特纳斯将接替库克担任苹果CEO</div><div class="sub">抖音</div></div><span class="chev" aria-hidden="true">›</span></a><a class="row meme" href="https://search.bilibili.com/all?keyword=%E6%8B%86%E8%A7%A3AI%E8%89%BA%E4%BA%BA%E5%BA%93%E8%83%8C%E5%90%8E%E9%87%8E%E5%BF%83" target="_blank" rel="noopener"><span class="rank">04</span><div class="main"><div class="title">拆解AI艺人库背后野心</div><div class="sub">B 站</div></div><span class="chev" aria-hidden="true">›</span></a><a class="row meme" href="https://search.bilibili.com/all?keyword=AI%E7%9F%AD%E5%89%A7%E6%98%AF%E5%A6%82%E4%BD%95%E8%AF%9E%E7%94%9F%E7%9A%84" target="_blank" rel="noopener"><span class="rank">05</span><div class="main"><div class="title">AI短剧是如何诞生的</div><div class="sub">B 站</div></div><span class="chev" aria-hidden="true">›</span></a><a class="row meme" href="https://search.bilibili.com/all?keyword=%E6%B7%B1%E5%BA%A6%E8%A7%A3%E8%AF%BB%E6%9C%BA%E5%99%A8%E4%BA%BA%E9%A9%AC%E6%8B%89%E6%9D%BE%E8%B7%91%E5%90%91%E4%BD%95%E6%96%B9" target="_blank" rel="noopener"><span class="rank">06</span><div class="main"><div class="title">深度解读机器人马拉松跑向何方</div><div class="sub">B 站</div></div><span class="chev" aria-hidden="true">›</span></a></div><div class="cat-group">  <div class="cat-title">🎭 娱乐与明星<span class="cat-count">5</span></div>  <a class="row meme" href="https://s.weibo.com/weibo?q=%E5%BD%93%E8%B4%A2%E5%8A%A1%E5%8E%BB%E7%9C%8B%E6%BC%94%E5%94%B1%E4%BC%9A" target="_blank" rel="noopener"><span class="rank">01</span><div class="main"><div class="title">当财务去看演唱会</div><div class="sub">微博</div></div><span class="chev" aria-hidden="true">›</span></a><a class="row meme" href="https://s.weibo.com/weibo?q=SK%E5%9B%9E%E5%BA%94%E5%A5%B3%E5%AD%A9%E6%8C%AA%E7%94%A8%E4%B8%8A%E5%8D%83%E4%B8%87%E6%89%93%E8%B5%8F%E4%B8%BB%E6%92%AD" target="_blank" rel="noopener"><span class="rank">02</span><div class="main"><div class="title">SK回应女孩挪用上千万打赏主播</div><div class="sub">微博</div></div><span class="chev" aria-hidden="true">›</span></a><a class="row meme" href="https://search.bilibili.com/all?keyword=%E6%AD%8C%E5%89%A7%E8%80%81%E5%B8%88%E9%94%90%E8%AF%84BTS%E5%92%8CJYP%E8%88%9E%E5%8F%B0" target="_blank" rel="noopener"><span class="rank">03</span><div class="main"><div class="title">歌剧老师锐评BTS和JYP舞台</div><div class="sub">B 站</div></div><span class="chev" aria-hidden="true">›</span></a><a class="row meme" href="https://search.bilibili.com/all?keyword=%E9%9F%A9%E5%9B%BD%E7%94%B5%E5%BD%B1%E5%93%AD%E5%A3%B0%E9%87%8D%E6%9E%84%E5%BC%8F%E8%A7%A3%E8%AF%BB" target="_blank" rel="noopener"><span class="rank">04</span><div class="main"><div class="title">韩国电影哭声重构式解读</div><div class="sub">B 站</div></div><span class="chev" aria-hidden="true">›</span></a><a class="row meme" href="https://search.bilibili.com/all?keyword=%E7%9B%98%E7%82%B9%E5%98%8E%E5%AD%90%E5%93%A5%E7%9B%B4%E6%92%AD%E5%B8%A6%E8%B4%A7%E5%90%8D%E5%9C%BA%E9%9D%A2" target="_blank" rel="noopener"><span class="rank">05</span><div class="main"><div class="title">盘点嘎子哥直播带货名场面</div><div class="sub">B 站</div></div><span class="chev" aria-hidden="true">›</span></a></div><div class="cat-group">  <div class="cat-title">⚽ 体育赛事<span class="cat-count">1</span></div>  <a class="row meme" href="https://www.douyin.com/search/%E4%BC%8A%E6%9C%97%E7%94%B7%E8%B6%B3%E5%A4%87%E6%88%98%E4%B8%96%E7%95%8C%E6%9D%AF" target="_blank" rel="noopener"><span class="rank">01</span><div class="main"><div class="title">伊朗男足备战世界杯</div><div class="sub">抖音</div></div><span class="chev" aria-hidden="true">›</span></a></div><div class="cat-group">  <div class="cat-title">🎮 游戏与二次元<span class="cat-count">1</span></div>  <a class="row meme" href="https://search.bilibili.com/all?keyword=%E7%81%AB%E5%BD%B1%E6%89%8B%E6%B8%B8%E6%BC%82%E6%B3%8A%E5%9B%A2%E8%97%8F%E5%85%A8%E6%8A%80%E8%83%BD%E7%88%86%E6%96%99" target="_blank" rel="noopener"><span class="rank">01</span><div class="main"><div class="title">火影手游漂泊团藏全技能爆料</div><div class="sub">B 站</div></div><span class="chev" aria-hidden="true">›</span></a></div><div class="cat-group">  <div class="cat-title">💰 商业与财经<span class="cat-count">3</span></div>  <a class="row meme" href="https://s.weibo.com/weibo?q=%E7%88%B1%E5%A5%87%E8%89%BACEO%E9%BE%9A%E5%AE%87%E5%8F%91%E5%A3%B0" target="_blank" rel="noopener"><span class="rank">01</span><div class="main"><div class="title">爱奇艺CEO龚宇发声</div><div class="sub">微博</div></div><span class="chev" aria-hidden="true">›</span></a><a class="row meme" href="https://s.weibo.com/weibo?q=%E5%B7%A5%E8%B5%84%E9%AB%98%E4%BD%86%E6%98%AF%E5%BE%88%E5%AD%A4%E7%8B%AC%E7%9A%84%E5%B7%A5%E4%BD%9C" target="_blank" rel="noopener"><span class="rank">02</span><div class="main"><div class="title">工资高但是很孤独的工作</div><div class="sub">微博</div></div><span class="chev" aria-hidden="true">›</span></a><a class="row meme" href="https://s.weibo.com/weibo?q=A%E8%82%A1" target="_blank" rel="noopener"><span class="rank">03</span><div class="main"><div class="title">A股</div><div class="sub">微博</div></div><span class="chev" aria-hidden="true">›</span></a></div><div class="cat-group">  <div class="cat-title">🍜 美食与生活<span class="cat-count">1</span></div>  <a class="row meme" href="https://www.xiaohongshu.com/search_result?keyword=%E8%B6%85%E6%97%A5%E5%B8%B8%E7%BE%8E%E9%A3%9F%E6%95%99%E7%A8%8B%E9%80%9F%E6%9D%A5get&amp;type=51" target="_blank" rel="noopener"><span class="rank">01</span><div class="main"><div class="title">超日常美食教程速来get</div><div class="sub">小红书</div></div><span class="chev" aria-hidden="true">›</span></a></div><div class="cat-group">  <div class="cat-title">🏛 时事与社会<span class="cat-count">1</span></div>  <a class="row meme" href="https://www.douyin.com/search/%E7%BE%8E%E8%8F%B2%E5%90%AF%E5%8A%A8%E5%86%9B%E4%BA%8B%E6%BC%94%E4%B9%A0%20%E4%B8%AD%E6%96%B9%E5%9B%9E%E5%BA%94" target="_blank" rel="noopener"><span class="rank">01</span><div class="main"><div class="title">美菲启动军事演习 中方回应</div><div class="sub">抖音</div></div><span class="chev" aria-hidden="true">›</span></a></div><div class="cat-group">  <div class="cat-title">🌏 旅行与地理<span class="cat-count">4</span></div>  <a class="row meme" href="https://www.xiaohongshu.com/search_result?keyword=%E7%94%A8%E4%B8%87%E8%83%BD%E6%97%85%E8%A1%8C%E6%8B%8D%E7%85%A7%E5%A7%BF%E5%8A%BF%E7%BE%8E%E7%BE%8E%E5%87%BA%E7%89%87&amp;type=51" target="_blank" rel="noopener"><span class="rank">01</span><div class="main"><div class="title">用万能旅行拍照姿势美美出片</div><div class="sub">小红书</div></div><span class="chev" aria-hidden="true">›</span></a><a class="row meme" href="https://www.xiaohongshu.com/search_result?keyword=%E6%88%91%E7%9A%84%E5%AE%B6%E5%BA%AD%E6%97%85%E8%A1%8C%E6%9B%B4%E5%83%8F%E6%98%AF%E6%89%93%E5%89%AF%E6%9C%AC&amp;type=51" target="_blank" rel="noopener"><span class="rank">02</span><div class="main"><div class="title">我的家庭旅行更像是打副本</div><div class="sub">小红书</div></div><span class="chev" aria-hidden="true">›</span></a><a class="row meme" href="https://www.xiaohongshu.com/search_result?keyword=%E6%B5%B7%E8%BE%B9%E6%97%A5%E8%90%BD%E8%B5%B4%E4%B8%80%E5%9C%BA%E6%B8%A9%E6%9F%94%E7%BA%A6%E4%BC%9A&amp;type=51" target="_blank" rel="noopener"><span class="rank">03</span><div class="main"><div class="title">海边日落赴一场温柔约会</div><div class="sub">小红书</div></div><span class="chev" aria-hidden="true">›</span></a><a class="row meme" href="https://www.xiaohongshu.com/search_result?keyword=%E6%88%91%E6%9D%A5%E5%BD%93%E6%97%85%E8%A1%8C%E4%B8%AD%E7%9A%84%E9%A2%9C%E8%89%B2%E7%8C%8E%E6%89%8B&amp;type=51" target="_blank" rel="noopener"><span class="rank">04</span><div class="main"><div class="title">我来当旅行中的颜色猎手</div><div class="sub">小红书</div></div><span class="chev" aria-hidden="true">›</span></a></div><div class="cat-group">  <div class="cat-title">💬 其他话题<span class="cat-count">6</span></div>  <a class="row meme" href="https://s.weibo.com/weibo?q=42%E7%A7%8D%E5%9B%BE%E4%B9%A6%E5%85%A5%E9%80%892025%E5%B9%B4%E5%BA%A6%E4%B8%AD%E5%9B%BD%E5%A5%BD%E4%B9%A6" target="_blank" rel="noopener"><span class="rank">01</span><div class="main"><div class="title">42种图书入选2025年度中国好书</div><div class="sub">微博</div></div><span class="chev" aria-hidden="true">›</span></a><a class="row meme" href="https://s.weibo.com/weibo?q=%E6%96%B0%E7%96%86%E7%9A%84%E4%BD%9C%E6%81%AF%E6%97%B6%E9%97%B4%E5%A4%AA%E9%80%82%E5%90%88%E5%B9%B4%E8%BD%BB%E4%BA%BA%E4%BA%86" target="_blank" rel="noopener"><span class="rank">02</span><div class="main"><div class="title">新疆的作息时间太适合年轻人了</div><div class="sub">微博</div></div><span class="chev" aria-hidden="true">›</span></a><a class="row meme" href="https://s.weibo.com/weibo?q=%E5%AD%99%E4%BF%AA%E5%84%BF%E5%AD%90%E7%94%BB%E4%B8%AA%E5%A6%86%E7%9B%B4%E6%8E%A5%E8%83%BD%E6%BC%94%E7%94%84%E5%AC%9B%E4%BA%86" target="_blank" rel="noopener"><span class="rank">03</span><div class="main"><div class="title">孙俪儿子画个妆直接能演甄嬛了</div><div class="sub">微博</div></div><span class="chev" aria-hidden="true">›</span></a><a class="row meme" href="https://s.weibo.com/weibo?q=%E6%A3%AE%E6%9E%97%E7%8B%BCvs%E6%8E%98%E9%87%91" target="_blank" rel="noopener"><span class="rank">04</span><div class="main"><div class="title">森林狼vs掘金</div><div class="sub">微博</div></div><span class="chev" aria-hidden="true">›</span></a><a class="row meme" href="https://s.weibo.com/weibo?q=%E5%AE%8B%E6%89%BF%E7%82%AB%E5%AE%A3%E5%B8%83%E5%BD%93%E7%88%B8" target="_blank" rel="noopener"><span class="rank">05</span><div class="main"><div class="title">宋承炫宣布当爸</div><div class="sub">微博</div></div><span class="chev" aria-hidden="true">›</span></a><a class="row meme" href="https://s.weibo.com/weibo?q=%E7%AA%88%E7%AA%88%E6%9C%89%E6%9C%9F%20%E7%A1%AC%E5%88%9A%E7%88%B1%E5%A5%87%E8%89%BA" target="_blank" rel="noopener"><span class="rank">06</span><div class="main"><div class="title">窈窈有期 硬刚爱奇艺</div><div class="sub">微博</div></div><span class="chev" aria-hidden="true">›</span></a></div>
   </section>
 
   <section>
     <div class="sec-head">
       <h2>😄 冷笑话</h2>
-      <div class="count">2 条</div>
+      <div class="count">10 条</div>
     </div>
-    <div class="joke">有人存你号码是为了打给你，我不一样，我是为了不接。</div>
-<div class="joke">由于性格太内向，一直做不出，抢着结账这种事。</div>
+    <div class="joke">每次看你穿丝袜的时候，我都有一种无法言喻的感觉，那就是萝卜还包保鲜膜咧。</div>
+<div class="joke">因为穷我连关心你都不敢，就怕你说嘘寒问暖，不如打笔巨款。</div>
+<div class="joke">熟练地运用，关我屁事和关你屁事，可以节省人生80%的时间。</div>
+<div class="joke">两个人吵架，打他是解决不了问题的，但是解气啊。</div>
+<div class="joke">铁杵能磨成针，但木杵只能磨成牙签。材料不对再努力也没用。</div>
+<div class="joke">试着去了解那些你讨厌的人，你会发现，真是越看越讨厌。</div>
+<div class="joke">今天是除夕夜，来来来，给你夹块你最爱吃的天鹅肉。</div>
+<div class="joke">2019年第一天，说出你的新年愿望，那就一定不会实现。</div>
+<div class="joke">每次看穷游日志的感受都是，那么穷就别TM出去浪了。</div>
+<div class="joke">请相信我，我所说的每句话，都是废话！</div>
   </section>
 
   <section>
     <div class="sec-head">
-      <h2>🎬 电影榜单</h2>
-      <div class="count">2 部 · 点击看详情</div>
+      <h2>🎬 影音榜单</h2>
+      <div class="count">电影 · 剧集 · 流行音乐 · 点击看详情</div>
     </div>
-    <a class="row movie" href="https://maoyan.com/films/1531786" target="_blank" rel="noopener"><div class="poster poster-empty">🎬</div><div class="main"><div class="title">我，许可</div><div class="sub"><span class="accent">上映19天</span></div><div class="meta">累计票房 1.64亿</div><div class="tag">猫眼实时榜</div></div><span class="chev" aria-hidden="true">›</span></a>
-<a class="row movie" href="https://movie.douban.com/subject/35010610/" target="_blank" rel="noopener"><img src="https://doubanio.viki.moe/view/photo/m_ratio_poster/public/p2931370692.jpg" alt="" class="poster" loading="lazy"><div class="main"><div class="title">挽救计划</div><div class="sub"><span class="accent">豆瓣 8.6</span></div><div class="meta">剧情 科幻 惊悚 / 菲尔·罗德 克里斯托弗·米勒</div><div class="tag">豆瓣每周榜</div></div><span class="chev" aria-hidden="true">›</span></a>
+    <a class="row movie" href="https://movie.douban.com/subject/37332784/" target="_blank" rel="noopener"><img src="https://doubanio.viki.moe/view/photo/m_ratio_poster/public/p2931053953.jpg" alt="" class="poster" loading="lazy"><div class="main"><div class="title">我，许可</div><div class="sub"><span class="accent">豆瓣 8.3</span></div><div class="meta">剧情 喜剧 / 杨荔钠</div><div class="tag">🎬 电影</div></div><span class="chev" aria-hidden="true">›</span></a>
+<a class="row movie" href="https://movie.douban.com/subject/35010610/" target="_blank" rel="noopener"><img src="https://doubanio.viki.moe/view/photo/m_ratio_poster/public/p2931370692.jpg" alt="" class="poster" loading="lazy"><div class="main"><div class="title">挽救计划</div><div class="sub"><span class="accent">豆瓣 8.6</span></div><div class="meta">剧情 科幻 惊悚 / 菲尔·罗德 克里斯托弗·米勒</div><div class="tag">🎬 电影</div></div><span class="chev" aria-hidden="true">›</span></a>
+<a class="row movie" href="https://movie.douban.com/subject/36486147/" target="_blank" rel="noopener"><img src="https://doubanio.viki.moe/view/photo/m_ratio_poster/public/p2925299655.jpg" alt="" class="poster" loading="lazy"><div class="main"><div class="title">总统的蛋糕</div><div class="sub"><span class="accent">豆瓣 7.9</span></div><div class="meta">剧情 / 哈桑·哈迪</div><div class="tag">🎬 电影</div></div><span class="chev" aria-hidden="true">›</span></a>
+<a class="row movie" href="https://movie.douban.com/subject/36866390/" target="_blank" rel="noopener"><img src="https://doubanio.viki.moe/view/photo/m_ratio_poster/public/p2931068376.jpg" alt="" class="poster" loading="lazy"><div class="main"><div class="title">危险关系</div><div class="sub"><span class="accent">豆瓣 7.9</span></div><div class="meta">剧情 / 薛晓路</div><div class="tag">📺 国产剧</div></div><span class="chev" aria-hidden="true">›</span></a>
+<a class="row movie" href="https://movie.douban.com/subject/37070283/" target="_blank" rel="noopener"><img src="https://doubanio.viki.moe/view/photo/m_ratio_poster/public/p2930670896.jpg" alt="" class="poster" loading="lazy"><div class="main"><div class="title">正义女神</div><div class="sub"><span class="accent">豆瓣 7.9</span></div><div class="meta">剧情 / 钟澍佳</div><div class="tag">📺 国产剧</div></div><span class="chev" aria-hidden="true">›</span></a>
+<a class="row movie" href="https://movie.douban.com/subject/36343491/" target="_blank" rel="noopener"><img src="https://doubanio.viki.moe/view/photo/m_ratio_poster/public/p2930448314.jpg" alt="" class="poster" loading="lazy"><div class="main"><div class="title">黑袍纠察队 第五季</div><div class="sub"><span class="accent">豆瓣 9.1</span></div><div class="meta">剧情 喜剧 动作 科幻 犯罪 / 菲利浦·斯格里西亚 莎娜·斯坦</div><div class="tag">📺 海外剧</div></div><span class="chev" aria-hidden="true">›</span></a>
+<a class="row movie" href="https://movie.douban.com/subject/37370438/" target="_blank" rel="noopener"><img src="https://doubanio.viki.moe/view/photo/m_ratio_poster/public/p2930970048.jpg" alt="" class="poster" loading="lazy"><div class="main"><div class="title">绝望写手 第五季</div><div class="sub"><span class="accent">豆瓣 9.4</span></div><div class="meta">剧情 喜剧 / 露西亚·安尼洛 保罗·当斯</div><div class="tag">📺 海外剧</div></div><span class="chev" aria-hidden="true">›</span></a>
+<a class="row movie" href="https://music.163.com/#/song?id=1352916750" target="_blank" rel="noopener"><img src="http://p2.music.126.net/9A4DjPkg0SkqfFPxb_XTaw==/109951163722734460.jpg" alt="" class="poster" loading="lazy"><div class="main"><div class="title">12.31</div><div class="sub"><span class="accent">郑润泽</span></div><div class="meta">专辑《就目前来说（demo)》</div><div class="tag">🎵 流行音乐</div></div><span class="chev" aria-hidden="true">›</span></a>
+<a class="row movie" href="https://music.163.com/#/song?id=3367388553" target="_blank" rel="noopener"><img src="http://p2.music.126.net/lgJcyEuzTa1l2dusJMypAw==/109951173053464580.jpg" alt="" class="poster" loading="lazy"><div class="main"><div class="title">长久小有</div><div class="sub"><span class="accent">荣诗雨</span></div><div class="meta">专辑《长久小有》</div><div class="tag">🎵 流行音乐</div></div><span class="chev" aria-hidden="true">›</span></a>
+<a class="row movie" href="https://music.163.com/#/song?id=2134502607" target="_blank" rel="noopener"><img src="http://p2.music.126.net/-hDd2lFiw0qJvFBLWlxD1g==/109951172346971908.jpg" alt="" class="poster" loading="lazy"><div class="main"><div class="title">Text Luv</div><div class="sub"><span class="accent">CashTrippy / koakuma</span></div><div class="meta">专辑《Text Luv》</div><div class="tag">🎵 流行音乐</div></div><span class="chev" aria-hidden="true">›</span></a>
+<a class="row movie" href="https://music.163.com/#/song?id=1519494" target="_blank" rel="noopener"><img src="http://p2.music.126.net/muxnLBk-PBYGLUHgUeBeIA==/879609302271739.jpg" alt="" class="poster" loading="lazy"><div class="main"><div class="title">One Less Lonely Girl</div><div class="sub"><span class="accent">Justin Bieber</span></div><div class="meta">专辑《One Less Lonely Girl》</div><div class="tag">🎵 流行音乐</div></div><span class="chev" aria-hidden="true">›</span></a>
+<a class="row movie" href="https://music.163.com/#/song?id=2010567820" target="_blank" rel="noopener"><img src="http://p2.music.126.net/6krpvhA5Hr4gBrhdqpbeNg==/109951168193404421.jpg" alt="" class="poster" loading="lazy"><div class="main"><div class="title">告白</div><div class="sub"><span class="accent">李大奔BENZO</span></div><div class="meta">专辑《告白》</div><div class="tag">🎵 流行音乐</div></div><span class="chev" aria-hidden="true">›</span></a>
   </section>
 
   <section>
     <div class="sec-head">
-      <h2>🎤 本月演唱会</h2>
-      <div class="count">1 场</div>
+      <h2>🎤 演唱会关注</h2>
+      <div class="count">5 位 · 点击查大麦网最新场次</div>
     </div>
-    <a class="row concert" href="https://search.damai.cn/search.html?keyword=%E5%8D%8E%E6%99%A8%E5%AE%87%20%E7%81%AB%E6%98%9F" target="_blank" rel="noopener"><span class="dot concert-dot"></span><div class="main"><div class="title">华晨宇「火星」演唱会</div><div class="sub">大麦网搜索 · 查看场次与票价</div></div><span class="chev" aria-hidden="true">›</span></a>
+    <a class="row concert" href="https://search.damai.cn/search.html?keyword=%E7%8E%8B%E5%8A%9B%E5%AE%8F%20%E6%BC%94%E5%94%B1%E4%BC%9A" target="_blank" rel="noopener"><span class="dot concert-dot"></span><div class="main"><div class="title">王力宏<span class="chip">华语 R&amp;B 代表</span></div><div class="sub">R&amp;B / 抒情 · 大麦网搜索最新场次</div></div><span class="chev" aria-hidden="true">›</span></a>
+<a class="row concert" href="https://search.damai.cn/search.html?keyword=%E5%BE%90%E8%89%AF%20%E6%BC%94%E5%94%B1%E4%BC%9A" target="_blank" rel="noopener"><span class="dot concert-dot"></span><div class="main"><div class="title">徐良<span class="chip">非主流时代经典</span></div><div class="sub">情歌 / 复古 · 大麦网搜索最新场次</div></div><span class="chev" aria-hidden="true">›</span></a>
+<a class="row concert" href="https://search.damai.cn/search.html?keyword=%E6%9E%97%E4%BF%8A%E6%9D%B0%20%E6%BC%94%E5%94%B1%E4%BC%9A" target="_blank" rel="noopener"><span class="dot concert-dot"></span><div class="main"><div class="title">林俊杰<span class="chip">JJ20 FINAL LAP 尾声</span></div><div class="sub">流行 / 抒情 · 大麦网搜索最新场次</div></div><span class="chev" aria-hidden="true">›</span></a>
+<a class="row concert" href="https://search.damai.cn/search.html?keyword=%E6%9D%8E%E8%8D%A3%E6%B5%A9%20%E6%BC%94%E5%94%B1%E4%BC%9A" target="_blank" rel="noopener"><span class="dot concert-dot"></span><div class="main"><div class="title">李荣浩<span class="chip">全能唱作人</span></div><div class="sub">流行 / 都市 · 大麦网搜索最新场次</div></div><span class="chev" aria-hidden="true">›</span></a>
+<a class="row concert" href="https://search.damai.cn/search.html?keyword=%E5%91%8A%E4%BA%94%E4%BA%BA%20%E6%BC%94%E5%94%B1%E4%BC%9A" target="_blank" rel="noopener"><span class="dot concert-dot"></span><div class="main"><div class="title">告五人<span class="chip">金曲台独立乐团</span></div><div class="sub">独立 / 现场 · 大麦网搜索最新场次</div></div><span class="chev" aria-hidden="true">›</span></a>
   </section>
 
   <section>
     <div class="sec-head">
-      <h2>🧳 本季旅游目的地</h2>
-      <div class="count">2 处</div>
+      <h2>🧳 旅游推荐</h2>
+      <div class="count">3 处 · 深圳出发视角 · 点击看攻略</div>
     </div>
-    <a class="row travel" href="https://www.xiaohongshu.com/search_result?keyword=%E6%96%B0%E7%96%86%E4%BC%8A%E7%8A%81%E6%9D%8F%E8%8A%B1%E6%B2%9F&amp;source=web_search_result_notes" target="_blank" rel="noopener"><span class="dot travel-dot"></span><div class="main"><div class="title">新疆伊犁杏花沟·4 月中下旬粉色花海</div><div class="sub">小红书搜索 · 查看攻略与游记</div></div><span class="chev" aria-hidden="true">›</span></a>
-<a class="row travel" href="https://www.xiaohongshu.com/search_result?keyword=%E4%BA%91%E5%8D%97%E7%BD%97%E5%B9%B3%E6%B2%B9%E8%8F%9C%E8%8A%B1%E5%B0%BE%E5%A3%B0%20%2B%20%E4%B9%9D%E9%BE%99%E7%80%91%E5%B8%83&amp;source=web_search_result_notes" target="_blank" rel="noopener"><span class="dot travel-dot"></span><div class="main"><div class="title">云南罗平油菜花尾声 + 九龙瀑布</div><div class="sub">小红书搜索 · 查看攻略与游记</div></div><span class="chev" aria-hidden="true">›</span></a>
+    <a class="row travel" href="https://www.xiaohongshu.com/search_result?keyword=%E6%B1%9F%E8%A5%BF%E9%BE%99%E8%99%8E%E5%B1%B1%20%2B%20%E6%AD%A6%E5%A4%B7%E5%B1%B1%E5%8F%8C%E7%A8%8B%20%E6%94%BB%E7%95%A5&amp;source=web_search_result_notes" target="_blank" rel="noopener"><span class="dot travel-dot"></span><div class="main"><div class="title">江西龙虎山 + 武夷山双程</div><div class="sub"><span class="accent">✦ 清明前后春茶季开采，丹霞绿水对比强烈</span></div><div class="meta">🚄 深圳北 → 武夷山东 高铁 5h30；或直飞武夷山 1h40</div><div class="meta">⏱ 建议 4-5 天</div><div class="meta sz">深圳视角：广东出发最方便的春茶行程</div></div><span class="chev" aria-hidden="true">›</span></a>
+<a class="row travel" href="https://www.xiaohongshu.com/search_result?keyword=%E6%B9%96%E5%8D%97%E5%BC%A0%E5%AE%B6%E7%95%8C%20%E6%94%BB%E7%95%A5&amp;source=web_search_result_notes" target="_blank" rel="noopener"><span class="dot travel-dot"></span><div class="main"><div class="title">湖南张家界·国家森林公园</div><div class="sub"><span class="accent">✦ 谷雨后新绿，云雾山景如水墨</span></div><div class="meta">🚄 深圳宝安 → 张家界荷花 1h50；景区大巴 30 分钟</div><div class="meta">⏱ 建议 4 天</div><div class="meta sz">深圳视角：直飞航班多，票价友好</div></div><span class="chev" aria-hidden="true">›</span></a>
+<a class="row travel" href="https://www.xiaohongshu.com/search_result?keyword=%E5%B9%BF%E8%A5%BF%E9%98%B3%E6%9C%94%20%E6%94%BB%E7%95%A5&amp;source=web_search_result_notes" target="_blank" rel="noopener"><span class="dot travel-dot"></span><div class="main"><div class="title">广西阳朔·漓江 + 遇龙河</div><div class="sub"><span class="accent">✦ 4 月春雨过后山水最润，竹筏皮划艇黄金期</span></div><div class="meta">🚄 深圳北 → 桂林 高铁 3h30；阳朔打车 1h20</div><div class="meta">⏱ 建议 3 天 2 晚</div><div class="meta sz">深圳视角：距离深圳最近的春日山水之一，整周末往返可行</div></div><span class="chev" aria-hidden="true">›</span></a>
   </section>
 
-  
-  <section class="news-section">
+  <section>
     <div class="sec-head">
-      <h2>60 秒读懂世界</h2>
-      <div class="count">8 条</div>
+      <h2>📰 60 秒读懂世界</h2>
+      <div class="count">15 条 · 点击搜索详情</div>
     </div>
-    <ul class="news-list"><li>2025 年我国人均阅读纸质书 4.81 本，较 2024 年增加 0.02 本；人均每天接触手机超 109 分钟，比 2024 年增加 0.78 分钟</li>
-<li>湖南试点学生运动能力达标：对应年级学生须达相应运动等级</li>
-<li>一季度全社会用电量同比增长 5.2%，专家称：第二产业成用电量增长主要拉动力</li>
-<li>餐饮业指数连续下行，中国烹饪协会：平台大额补贴正在破坏行业生态</li>
-<li>机构预测国内油价 21 日 24 时或迎年内首降，加满一箱 92 号汽油预计将少花约 20 元</li>
-<li>近 70 款车集体降价，覆盖新能源与燃油车，平均降价金额达 3.7 万元，最高降幅直逼 17 万</li>
-<li>中国脑机接口迈向临床应用：“北脑一号” 已完成 10 例人体植入，安全工作时长超过 45000 小时</li>
-<li>爱奇艺宣布超 100 位艺人同意入驻 AI 艺人库，CEO 称将提高演员拍摄效率，张若昀等多名艺人均否认签约 AI 授权</li></ul>
+    <a class="row news-row" href="https://www.baidu.com/s?wd=2025%20%E5%B9%B4%E6%88%91%E5%9B%BD%E4%BA%BA%E5%9D%87%E9%98%85%E8%AF%BB%E7%BA%B8%E8%B4%A8%E4%B9%A6%204.81&amp;tn=news" target="_blank" rel="noopener"><span class="news-bullet"></span><div class="main"><div class="title news-title">2025 年我国人均阅读纸质书 4.81 本，较 2024 年增加 0.02 本；人均每天接触手机超 109 分钟，比 2024 年增加 0.78 分钟</div></div><span class="chev" aria-hidden="true">›</span></a>
+<a class="row news-row" href="https://www.baidu.com/s?wd=%E6%B9%96%E5%8D%97%E8%AF%95%E7%82%B9%E5%AD%A6%E7%94%9F%E8%BF%90%E5%8A%A8%E8%83%BD%E5%8A%9B%E8%BE%BE%E6%A0%87&amp;tn=news" target="_blank" rel="noopener"><span class="news-bullet"></span><div class="main"><div class="title news-title">湖南试点学生运动能力达标：对应年级学生须达相应运动等级</div></div><span class="chev" aria-hidden="true">›</span></a>
+<a class="row news-row" href="https://www.baidu.com/s?wd=%E4%B8%80%E5%AD%A3%E5%BA%A6%E5%85%A8%E7%A4%BE%E4%BC%9A%E7%94%A8%E7%94%B5%E9%87%8F%E5%90%8C%E6%AF%94%E5%A2%9E%E9%95%BF%205.2%25&amp;tn=news" target="_blank" rel="noopener"><span class="news-bullet"></span><div class="main"><div class="title news-title">一季度全社会用电量同比增长 5.2%，专家称：第二产业成用电量增长主要拉动力</div></div><span class="chev" aria-hidden="true">›</span></a>
+<a class="row news-row" href="https://www.baidu.com/s?wd=%E9%A4%90%E9%A5%AE%E4%B8%9A%E6%8C%87%E6%95%B0%E8%BF%9E%E7%BB%AD%E4%B8%8B%E8%A1%8C&amp;tn=news" target="_blank" rel="noopener"><span class="news-bullet"></span><div class="main"><div class="title news-title">餐饮业指数连续下行，中国烹饪协会：平台大额补贴正在破坏行业生态</div></div><span class="chev" aria-hidden="true">›</span></a>
+<a class="row news-row" href="https://www.baidu.com/s?wd=%E6%9C%BA%E6%9E%84%E9%A2%84%E6%B5%8B%E5%9B%BD%E5%86%85%E6%B2%B9%E4%BB%B7%2021%20%E6%97%A5%2024%20%E6%97%B6%E6%88%96%E8%BF%8E&amp;tn=news" target="_blank" rel="noopener"><span class="news-bullet"></span><div class="main"><div class="title news-title">机构预测国内油价 21 日 24 时或迎年内首降，加满一箱 92 号汽油预计将少花约 20 元</div></div><span class="chev" aria-hidden="true">›</span></a>
+<a class="row news-row" href="https://www.baidu.com/s?wd=%E8%BF%91%2070%20%E6%AC%BE%E8%BD%A6%E9%9B%86%E4%BD%93%E9%99%8D%E4%BB%B7&amp;tn=news" target="_blank" rel="noopener"><span class="news-bullet"></span><div class="main"><div class="title news-title">近 70 款车集体降价，覆盖新能源与燃油车，平均降价金额达 3.7 万元，最高降幅直逼 17 万</div></div><span class="chev" aria-hidden="true">›</span></a>
+<a class="row news-row" href="https://www.baidu.com/s?wd=%E4%B8%AD%E5%9B%BD%E8%84%91%E6%9C%BA%E6%8E%A5%E5%8F%A3%E8%BF%88%E5%90%91%E4%B8%B4%E5%BA%8A%E5%BA%94%E7%94%A8&amp;tn=news" target="_blank" rel="noopener"><span class="news-bullet"></span><div class="main"><div class="title news-title">中国脑机接口迈向临床应用：“北脑一号” 已完成 10 例人体植入，安全工作时长超过 45000 小时</div></div><span class="chev" aria-hidden="true">›</span></a>
+<a class="row news-row" href="https://www.baidu.com/s?wd=%E7%88%B1%E5%A5%87%E8%89%BA%E5%AE%A3%E5%B8%83%E8%B6%85%20100%20%E4%BD%8D%E8%89%BA%E4%BA%BA%E5%90%8C%E6%84%8F%E5%85%A5%E9%A9%BB%20A&amp;tn=news" target="_blank" rel="noopener"><span class="news-bullet"></span><div class="main"><div class="title news-title">爱奇艺宣布超 100 位艺人同意入驻 AI 艺人库，CEO 称将提高演员拍摄效率，张若昀等多名艺人均否认签约 AI 授权</div></div><span class="chev" aria-hidden="true">›</span></a>
+<a class="row news-row" href="https://www.baidu.com/s?wd=%E8%BF%90%20-%2020B%20%E9%A6%96%E6%AC%A1%E6%B5%B7%E5%A4%96%E4%BB%BB%E5%8A%A1&amp;tn=news" target="_blank" rel="noopener"><span class="news-bullet"></span><div class="main"><div class="title news-title">运 - 20B 首次海外任务，赴韩国接迎第十三批志愿军烈士遗骸回国</div></div><span class="chev" aria-hidden="true">›</span></a>
+<a class="row news-row" href="https://www.baidu.com/s?wd=%E4%BA%94%E4%B8%80%E5%81%87%E6%9C%9F%E8%B5%B4%E6%97%A5%E8%88%AA%E7%8F%AD%E9%87%8F%E6%8E%A5%E8%BF%91%E8%85%B0%E6%96%A9&amp;tn=news" target="_blank" rel="noopener"><span class="news-bullet"></span><div class="main"><div class="title news-title">五一假期赴日航班量接近腰斩，每天取消超 40 班；往返韩国计划航班量位列第一，同比增长 11.1%</div></div><span class="chev" aria-hidden="true">›</span></a>
   </section>
 
   <footer>
-    <div class="sources">微博 · 抖音 · 知乎 · B 站 · 猫眼 · 豆瓣 · 60s</div>
-    <div>生成于 2026-04-21 13:11 · <a href="./">往期归档</a></div>
+    <div class="sources">微博 · 抖音 · 小红书 · B 站 · 豆瓣 · 网易云 · 60s</div>
+    <div>生成于 2026-04-21 13:30 · <a href="./archive.html">📚 往期归档</a></div>
   </footer>
 </div>
 </body>
