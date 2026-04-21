@@ -2,280 +2,294 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="theme-color" content="#0b1020">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0d1424">
 <title>每日热梗·2026-04-21</title>
 <style>
   :root {
-    --bg-0: #0b1020;
-    --bg-1: #131a2f;
-    --bg-2: #1b2340;
-    --fg: #e7ecf5;
-    --fg-dim: #9aa4bd;
-    --accent: #7c9cff;
-    --accent-2: #ff7ab6;
-    --ok: #5cd3a6;
-    --warn: #ffcf72;
+    --bg: #0d1424;
+    --bg-soft: #151d33;
+    --card: rgba(255,255,255,0.035);
+    --card-border: rgba(255,255,255,0.07);
+    --card-hover: rgba(255,255,255,0.06);
+    --fg: #eef1f8;
+    --fg-2: #b4bdd1;
+    --fg-3: #7d879f;
+    --accent: #ffb86b;
+    --accent-soft: rgba(255,184,107,0.14);
+    --hot: #ff7a7a;
+    --mint: #6ddaa8;
+    --sky: #82b1ff;
+    --divider: rgba(255,255,255,0.06);
   }
   * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
   body {
-    margin: 0;
-    font: 15px/1.7 -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft Yahei", sans-serif;
+    font: 15px/1.65 -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft Yahei", sans-serif;
     color: var(--fg);
-    background: radial-gradient(1200px 600px at 10% -10%, #2a3570 0%, transparent 50%),
-                radial-gradient(1000px 500px at 120% 10%, #7a2e8b 0%, transparent 55%),
-                linear-gradient(180deg, var(--bg-0), #060914 100%);
+    background: var(--bg);
+    background-image:
+      radial-gradient(800px 400px at -10% -10%, rgba(130, 177, 255, 0.08), transparent 60%),
+      radial-gradient(600px 300px at 110% 0%, rgba(255, 184, 107, 0.06), transparent 60%);
     min-height: 100vh;
-    padding: 16px 14px 80px;
+    padding: 20px 16px calc(60px + env(safe-area-inset-bottom));
     -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
   }
-  .wrap { max-width: 680px; margin: 0 auto; }
+  .wrap { max-width: 640px; margin: 0 auto; }
+  a { color: inherit; text-decoration: none; -webkit-tap-highlight-color: transparent; }
 
-  header {
-    padding: 8px 4px 20px;
-  }
+  /* ========== Header ========== */
+  header { padding: 4px 4px 16px; }
   .brand {
-    font-size: 12px;
-    color: var(--fg-dim);
-    letter-spacing: 2px;
-    margin-bottom: 8px;
-    text-transform: uppercase;
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 11px; letter-spacing: 3px;
+    color: var(--fg-3); text-transform: uppercase;
+    padding: 4px 10px;
+    border: 1px solid var(--card-border);
+    border-radius: 20px;
   }
   h1 {
-    margin: 0;
-    font-size: 28px;
-    font-weight: 800;
-    letter-spacing: -0.5px;
-    background: linear-gradient(90deg, #fff, #9fb6ff 60%, #ff9fd2);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+    margin: 14px 0 4px;
+    font-size: 26px; font-weight: 800; letter-spacing: -0.5px;
+    color: var(--fg);
   }
-  .date { color: var(--fg-dim); margin-top: 4px; font-size: 13px; }
-
+  .date {
+    color: var(--fg-3); font-size: 13px;
+    font-family: "SF Mono", "Menlo", monospace;
+  }
   .cover {
-    margin-top: 12px;
-    border-radius: 16px;
+    margin-top: 18px;
+    border-radius: 14px;
     overflow: hidden;
     aspect-ratio: 1068/455;
-    background: #222 center/cover no-repeat url('https://cdn.jsdmirror.com/gh/vikiboss/60s-static-host@main/static/images/2026-04-21.png');
-    box-shadow: 0 10px 40px -10px rgba(124, 156, 255, 0.35);
-    position: relative;
-  }
-  .cover::after {
-    content: '';
-    position: absolute; inset: 0;
-    background: linear-gradient(180deg, transparent 50%, rgba(0,0,0,0.45));
+    background: var(--bg-soft) center/cover no-repeat url('https://cdn.jsdmirror.com/gh/vikiboss/60s-static-host@main/static/images/2026-04-21.png');
+    box-shadow: 0 14px 40px -16px rgba(0,0,0,0.6);
   }
 
+  /* ========== Section ========== */
   section {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    backdrop-filter: blur(10px);
-    border-radius: 18px;
-    padding: 18px 16px;
-    margin-top: 16px;
+    margin-top: 22px;
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    padding: 4px 0;
+    overflow: hidden;
   }
   .sec-head {
-    display: flex;
-    align-items: center;
+    display: flex; align-items: center;
+    padding: 14px 18px 6px;
     gap: 10px;
-    margin-bottom: 12px;
-  }
-  .sec-head .icon {
-    width: 36px; height: 36px;
-    border-radius: 10px;
-    display: grid; place-items: center;
-    font-size: 18px;
-    background: linear-gradient(135deg, rgba(124,156,255,0.25), rgba(255,122,182,0.25));
-    border: 1px solid rgba(255,255,255,0.08);
   }
   .sec-head h2 {
     margin: 0;
-    font-size: 17px;
-    font-weight: 700;
+    font-size: 13px; font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--fg-2);
+    text-transform: uppercase;
   }
   .sec-head .count {
     margin-left: auto;
-    color: var(--fg-dim);
-    font-size: 12px;
+    color: var(--fg-3); font-size: 12px;
+    font-family: "SF Mono", "Menlo", monospace;
   }
 
-  ul { list-style: none; margin: 0; padding: 0; }
-
-  .item {
-    display: flex;
-    gap: 12px;
-    padding: 10px 0;
-    border-top: 1px solid rgba(255,255,255,0.05);
+  /* ========== Row (可点击条目通用样式) ========== */
+  .row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 18px;
+    border-top: 1px solid var(--divider);
+    transition: background 0.18s ease;
+    position: relative;
   }
-  .item:first-child { border-top: none; padding-top: 2px; }
-  .rank {
+  .row:first-of-type { border-top: 1px solid var(--divider); }
+  .sec-head + .row { border-top: 1px solid var(--divider); }
+  a.row:hover,
+  a.row:active { background: var(--card-hover); }
+  .row.static { cursor: default; }
+  .row .main { flex: 1; min-width: 0; }
+  .row .title {
+    font-weight: 600; font-size: 15px; color: var(--fg);
+    line-height: 1.5; word-break: break-word;
+  }
+  .row .sub {
+    margin-top: 3px;
+    font-size: 12px; color: var(--fg-3);
+  }
+  .row .sub .accent { color: var(--accent); font-weight: 600; }
+  .row .chev {
+    flex: 0 0 auto;
+    color: var(--fg-3);
+    font-size: 22px; line-height: 1;
+    font-family: "SF Mono", "Menlo", monospace;
+    opacity: 0.6;
+    transition: transform 0.18s ease, opacity 0.18s ease;
+  }
+  a.row:hover .chev { opacity: 1; transform: translateX(2px); color: var(--accent); }
+
+  /* ========== 热梗 ========== */
+  .meme .rank {
     flex: 0 0 28px;
-    color: var(--accent);
+    font-family: "SF Mono", "Menlo", monospace;
     font-weight: 700;
-    font-family: "SF Mono", Menlo, monospace;
-    font-size: 15px;
-  }
-  .item .body { flex: 1; min-width: 0; }
-  .item .title {
-    font-weight: 600;
-    line-height: 1.5;
-    word-break: break-word;
-  }
-  .item .sub {
-    color: var(--fg-dim);
-    font-size: 12px;
-    margin-top: 2px;
+    font-size: 14px;
+    color: var(--hot);
+    letter-spacing: 0;
   }
 
+  /* ========== 冷笑话 ========== */
   .joke {
-    padding: 12px 14px;
-    background: linear-gradient(135deg, rgba(255,207,114,0.08), rgba(255,122,182,0.08));
-    border-left: 3px solid var(--warn);
-    border-radius: 10px;
-    margin-bottom: 10px;
-    color: #f3e8c8;
+    padding: 14px 18px;
+    border-top: 1px solid var(--divider);
+    color: var(--fg);
+    font-size: 14.5px;
+    line-height: 1.75;
+    position: relative;
   }
-  .joke:last-child { margin-bottom: 0; }
+  .joke::before {
+    content: '"';
+    display: inline-block;
+    color: var(--accent);
+    font-size: 28px;
+    line-height: 0.8;
+    margin-right: 6px;
+    font-weight: 700;
+    vertical-align: -8px;
+  }
 
-  .movie {
-    display: flex;
-    gap: 12px;
-    padding: 12px 0;
-    border-top: 1px solid rgba(255,255,255,0.05);
-  }
-  .movie:first-child { border-top: none; padding-top: 2px; }
-  .poster {
-    flex: 0 0 68px;
-    width: 68px; height: 96px;
+  /* ========== 电影 ========== */
+  .movie .poster {
+    flex: 0 0 64px;
+    width: 64px; height: 88px;
     object-fit: cover;
     border-radius: 8px;
-    background: #222;
+    background: var(--bg-soft);
+    box-shadow: 0 4px 12px -4px rgba(0,0,0,0.5);
   }
-  .movie .body { flex: 1; display: flex; flex-direction: column; gap: 3px; }
-  .movie .title { font-weight: 700; font-size: 16px; }
-  .movie .sub { color: var(--accent); font-size: 13px; }
-  .movie .meta { color: var(--fg-dim); font-size: 12px; }
+  .movie .poster-empty {
+    display: grid; place-items: center;
+    color: var(--fg-3); font-size: 24px;
+  }
+  .movie .main { display: flex; flex-direction: column; gap: 4px; min-height: 88px; }
+  .movie .title { font-size: 16px; font-weight: 700; }
+  .movie .meta { font-size: 12px; color: var(--fg-3); }
   .movie .tag {
-    display: inline-block;
+    align-self: flex-start;
     margin-top: auto;
     padding: 2px 8px;
-    background: rgba(124,156,255,0.15);
+    background: var(--accent-soft);
     color: var(--accent);
     font-size: 11px;
-    border-radius: 6px;
-    width: fit-content;
+    border-radius: 999px;
+    font-weight: 600;
   }
 
-  .pill {
-    display: block;
-    padding: 12px 14px;
-    margin-bottom: 8px;
-    background: rgba(255,255,255,0.04);
-    border-radius: 12px;
-    border: 1px solid rgba(255,255,255,0.05);
+  /* ========== 演唱会 & 旅游 ========== */
+  .dot {
+    flex: 0 0 8px;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    margin-left: 4px;
   }
-  .pill:last-child { margin-bottom: 0; }
+  .concert-dot { background: var(--sky); box-shadow: 0 0 10px rgba(130,177,255,0.5); }
+  .travel-dot  { background: var(--mint); box-shadow: 0 0 10px rgba(109,218,168,0.5); }
 
-  .travel {
-    display: block;
-    padding: 12px 14px;
-    margin-bottom: 8px;
-    background: linear-gradient(135deg, rgba(92,211,166,0.08), rgba(124,156,255,0.08));
-    border-radius: 12px;
-    border-left: 3px solid var(--ok);
+  /* ========== 60 秒 ========== */
+  .news-section { margin-top: 22px; }
+  .news-list {
+    list-style: none;
+    margin: 0; padding: 8px 18px 14px;
   }
-  .travel:last-child { margin-bottom: 0; }
-
-  .news-section {
-    background: rgba(255,255,255,0.02);
-  }
-  .news-section ul { padding-left: 18px; list-style: disc; }
-  .news-section li {
-    color: var(--fg-dim);
+  .news-list li {
+    position: relative;
+    padding: 6px 0 6px 16px;
+    color: var(--fg-2);
     font-size: 13px;
-    line-height: 1.8;
-    margin-bottom: 2px;
+    line-height: 1.75;
+  }
+  .news-list li::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 14px;
+    width: 6px; height: 6px;
+    background: var(--fg-3);
+    border-radius: 50%;
   }
 
+  /* ========== Footer ========== */
   footer {
+    margin-top: 32px;
     text-align: center;
-    color: var(--fg-dim);
+    color: var(--fg-3);
     font-size: 12px;
-    margin-top: 28px;
-    padding: 0 12px;
-    line-height: 1.9;
+    line-height: 2;
+    font-family: "SF Mono", "Menlo", monospace;
   }
-  footer a { color: var(--accent); text-decoration: none; }
+  footer .sources { color: var(--fg-3); }
+  footer a { color: var(--accent); }
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
-    <div class="brand">DAILY DIGEST · 每日精选</div>
-    <h1>🌿 今日热梗 · 生活资讯</h1>
+    <div class="brand">Daily Digest</div>
+    <h1>今日热梗·生活资讯</h1>
     <div class="date">2026 年 04 月 21 日 · 星期二</div>
     <div class="cover"></div>
   </header>
 
   <section>
     <div class="sec-head">
-      <div class="icon">🔥</div>
-      <h2>今日热梗</h2>
-      <div class="count">3 条</div>
+      <h2>🔥 今日热梗</h2>
+      <div class="count">3 条 · 点击查看原帖</div>
     </div>
-    <ul><li class="item"><span class="rank">01</span><div class="body"><div class="title">万达电影更名为「儒意电影」，怎样看待此次权力交接？是否会开启业绩与市值双击的新阶段？</div><div class="sub">知乎热榜</div></div></li>
-<li class="item"><span class="rank">02</span><div class="body"><div class="title">赵心童丁俊晖上演中国德比</div><div class="sub">抖音热搜</div></div></li>
-<li class="item"><span class="rank">03</span><div class="body"><div class="title">UP主首发评测Pura X Max</div><div class="sub">B 站热搜</div></div></li></ul>
+    <a class="row meme" href="https://www.douyin.com/search/%E7%88%B1%E5%A5%87%E8%89%BA%E4%B8%96%E7%95%8C%E5%A4%A7%E4%BC%9A%E7%89%87%E5%8D%95" target="_blank" rel="noopener"><span class="rank">01</span><div class="main"><div class="title">爱奇艺世界大会片单</div><div class="sub">抖音热搜</div></div><span class="chev" aria-hidden="true">›</span></a>
+<a class="row meme" href="https://search.bilibili.com/all?keyword=%E5%B1%B1%E6%B2%B3%E8%BF%8E%E5%BF%A0%E9%AD%82" target="_blank" rel="noopener"><span class="rank">02</span><div class="main"><div class="title">山河迎忠魂</div><div class="sub">B 站热搜</div></div><span class="chev" aria-hidden="true">›</span></a>
+<a class="row meme" href="https://www.douyin.com/search/%E9%9B%AA%E9%A5%BC%E7%8C%B4%E8%B6%85%E8%B6%8A%E7%8F%AD%E8%B7%AA%E8%B0%A273%E5%B2%81%E9%AB%98%E9%BE%84%E7%B2%89%E4%B8%9D" target="_blank" rel="noopener"><span class="rank">03</span><div class="main"><div class="title">雪饼猴超越班跪谢73岁高龄粉丝</div><div class="sub">抖音热搜</div></div><span class="chev" aria-hidden="true">›</span></a>
   </section>
 
   <section>
     <div class="sec-head">
-      <div class="icon">😄</div>
-      <h2>冷笑话·摸鱼时间</h2>
+      <h2>😄 冷笑话</h2>
       <div class="count">2 条</div>
     </div>
-    <ul><li class="joke">生活费就像大姨妈，一个月来一次，几天就没了。</li>
-<li class="joke">我擅长做空A股，只要我一买，立刻跌。</li></ul>
+    <div class="joke">有人存你号码是为了打给你，我不一样，我是为了不接。</div>
+<div class="joke">由于性格太内向，一直做不出，抢着结账这种事。</div>
   </section>
 
   <section>
     <div class="sec-head">
-      <div class="icon">🎬</div>
-      <h2>电影榜单</h2>
-      <div class="count">2 部</div>
+      <h2>🎬 电影榜单</h2>
+      <div class="count">2 部 · 点击看详情</div>
     </div>
-    <ul><li class="movie"><div class="body"><div class="title">我，许可</div><div class="sub">上映19天</div><div class="meta">累计票房 1.63亿</div><div class="tag">猫眼实时榜</div></div></li>
-<li class="movie"><img src="https://doubanio.viki.moe/view/photo/m_ratio_poster/public/p2931370692.jpg" alt="" class="poster" loading="lazy"><div class="body"><div class="title">挽救计划</div><div class="sub">豆瓣 8.6</div><div class="meta">剧情 科幻 惊悚 / 菲尔·罗德 克里斯托弗·米勒</div><div class="tag">豆瓣每周榜</div></div></li></ul>
+    <a class="row movie" href="https://maoyan.com/films/1531786" target="_blank" rel="noopener"><div class="poster poster-empty">🎬</div><div class="main"><div class="title">我，许可</div><div class="sub"><span class="accent">上映19天</span></div><div class="meta">累计票房 1.64亿</div><div class="tag">猫眼实时榜</div></div><span class="chev" aria-hidden="true">›</span></a>
+<a class="row movie" href="https://movie.douban.com/subject/35010610/" target="_blank" rel="noopener"><img src="https://doubanio.viki.moe/view/photo/m_ratio_poster/public/p2931370692.jpg" alt="" class="poster" loading="lazy"><div class="main"><div class="title">挽救计划</div><div class="sub"><span class="accent">豆瓣 8.6</span></div><div class="meta">剧情 科幻 惊悚 / 菲尔·罗德 克里斯托弗·米勒</div><div class="tag">豆瓣每周榜</div></div><span class="chev" aria-hidden="true">›</span></a>
   </section>
 
   <section>
     <div class="sec-head">
-      <div class="icon">🎤</div>
-      <h2>本月演唱会</h2>
+      <h2>🎤 本月演唱会</h2>
       <div class="count">1 场</div>
     </div>
-    <ul><li class="pill">🎤 邓紫棋「启示录 II」巡演</li></ul>
+    <a class="row concert" href="https://search.damai.cn/search.html?keyword=%E5%8D%8E%E6%99%A8%E5%AE%87%20%E7%81%AB%E6%98%9F" target="_blank" rel="noopener"><span class="dot concert-dot"></span><div class="main"><div class="title">华晨宇「火星」演唱会</div><div class="sub">大麦网搜索 · 查看场次与票价</div></div><span class="chev" aria-hidden="true">›</span></a>
   </section>
 
   <section>
     <div class="sec-head">
-      <div class="icon">🧳</div>
-      <h2>本季旅游目的地</h2>
+      <h2>🧳 本季旅游目的地</h2>
       <div class="count">2 处</div>
     </div>
-    <ul><li class="travel">🧭 云南罗平油菜花尾声 + 九龙瀑布</li>
-<li class="travel">🧭 贵州万峰林 + 马岭河峡谷·春日喀斯特地貌云海</li></ul>
+    <a class="row travel" href="https://www.xiaohongshu.com/search_result?keyword=%E6%96%B0%E7%96%86%E4%BC%8A%E7%8A%81%E6%9D%8F%E8%8A%B1%E6%B2%9F&amp;source=web_search_result_notes" target="_blank" rel="noopener"><span class="dot travel-dot"></span><div class="main"><div class="title">新疆伊犁杏花沟·4 月中下旬粉色花海</div><div class="sub">小红书搜索 · 查看攻略与游记</div></div><span class="chev" aria-hidden="true">›</span></a>
+<a class="row travel" href="https://www.xiaohongshu.com/search_result?keyword=%E4%BA%91%E5%8D%97%E7%BD%97%E5%B9%B3%E6%B2%B9%E8%8F%9C%E8%8A%B1%E5%B0%BE%E5%A3%B0%20%2B%20%E4%B9%9D%E9%BE%99%E7%80%91%E5%B8%83&amp;source=web_search_result_notes" target="_blank" rel="noopener"><span class="dot travel-dot"></span><div class="main"><div class="title">云南罗平油菜花尾声 + 九龙瀑布</div><div class="sub">小红书搜索 · 查看攻略与游记</div></div><span class="chev" aria-hidden="true">›</span></a>
   </section>
 
   
   <section class="news-section">
     <div class="sec-head">
-      <div class="icon">📰</div>
       <h2>60 秒读懂世界</h2>
+      <div class="count">8 条</div>
     </div>
-    <ul><li>2025 年我国人均阅读纸质书 4.81 本，较 2024 年增加 0.02 本；人均每天接触手机超 109 分钟，比 2024 年增加 0.78 分钟</li>
+    <ul class="news-list"><li>2025 年我国人均阅读纸质书 4.81 本，较 2024 年增加 0.02 本；人均每天接触手机超 109 分钟，比 2024 年增加 0.78 分钟</li>
 <li>湖南试点学生运动能力达标：对应年级学生须达相应运动等级</li>
 <li>一季度全社会用电量同比增长 5.2%，专家称：第二产业成用电量增长主要拉动力</li>
 <li>餐饮业指数连续下行，中国烹饪协会：平台大额补贴正在破坏行业生态</li>
@@ -284,11 +298,10 @@
 <li>中国脑机接口迈向临床应用：“北脑一号” 已完成 10 例人体植入，安全工作时长超过 45000 小时</li>
 <li>爱奇艺宣布超 100 位艺人同意入驻 AI 艺人库，CEO 称将提高演员拍摄效率，张若昀等多名艺人均否认签约 AI 授权</li></ul>
   </section>
-  
 
   <footer>
-    数据来源：微博 / 抖音 / 知乎 / B 站 / 猫眼 / 豆瓣 / 60s<br>
-    生成时间 2026-04-21 11:51｜<a href="./">归档</a>
+    <div class="sources">微博 · 抖音 · 知乎 · B 站 · 猫眼 · 豆瓣 · 60s</div>
+    <div>生成于 2026-04-21 13:11 · <a href="./">往期归档</a></div>
   </footer>
 </div>
 </body>

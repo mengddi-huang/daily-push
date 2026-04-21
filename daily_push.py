@@ -22,6 +22,7 @@ import os
 import random
 import sys
 import urllib.error
+import urllib.parse
 import urllib.request
 from datetime import datetime
 from pathlib import Path
@@ -177,13 +178,15 @@ def collect_movies(limit: int = 2) -> list[dict[str, str]]:
             if not name or name in seen:
                 continue
             seen.add(name)
+            mid = m.get("movie_id") or ""
             out.append({
                 "title": name,
                 "subtitle": m.get("release_info") or "",
                 "meta": f"累计票房 {m.get('sum_box_desc') or m.get('box_office_desc', '-')}",
                 "source": "猫眼实时榜",
                 "cover": "",
-                "link": "",
+                "link": f"https://maoyan.com/films/{mid}" if mid else
+                        f"https://www.douban.com/search?q={urllib.parse.quote(name)}",
             })
             break
 
@@ -202,7 +205,7 @@ def collect_movies(limit: int = 2) -> list[dict[str, str]]:
                 "meta": meta,
                 "source": "豆瓣每周榜",
                 "cover": d.get("cover_proxy") or d.get("cover") or "",
-                "link": d.get("url") or "",
+                "link": d.get("url") or f"https://www.douban.com/search?q={urllib.parse.quote(name)}",
             })
             if len(out) >= limit:
                 break
@@ -298,14 +301,42 @@ TRAVEL_BY_MONTH: dict[int, list[str]] = {
 }
 
 
-def collect_concerts(limit: int = 1) -> list[str]:
+def _concert_keyword(title: str) -> str:
+    """从演唱会文案中提取主要关键词（艺人名 + 巡演名）用于搜索。"""
+    if "「" in title and "」" in title:
+        artist = title.split("「", 1)[0]
+        tour = title.split("「", 1)[1].split("」", 1)[0]
+        return f"{artist} {tour}"
+    return title.split("·", 1)[0]
+
+
+def _travel_keyword(title: str) -> str:
+    """从旅游推荐中提取地名作为搜索关键词。"""
+    return title.split("·", 1)[0].strip()
+
+
+def collect_concerts(limit: int = 1) -> list[dict[str, str]]:
     pool = CONCERTS_BY_MONTH.get(datetime.now().month, [])
-    return random.sample(pool, k=min(limit, len(pool))) if pool else ["本月演唱会清单待更新"]
+    picks = random.sample(pool, k=min(limit, len(pool))) if pool else ["本月演唱会清单待更新"]
+    return [
+        {
+            "title": t,
+            "link": f"https://search.damai.cn/search.html?keyword={urllib.parse.quote(_concert_keyword(t))}",
+        }
+        for t in picks
+    ]
 
 
-def collect_travel(limit: int = 2) -> list[str]:
+def collect_travel(limit: int = 2) -> list[dict[str, str]]:
     pool = TRAVEL_BY_MONTH.get(datetime.now().month, [])
-    return random.sample(pool, k=min(limit, len(pool))) if pool else ["本月旅游推荐待更新"]
+    picks = random.sample(pool, k=min(limit, len(pool))) if pool else ["本月旅游推荐待更新"]
+    return [
+        {
+            "title": t,
+            "link": f"https://www.xiaohongshu.com/search_result?keyword={urllib.parse.quote(_travel_keyword(t))}&source=web_search_result_notes",
+        }
+        for t in picks
+    ]
 
 
 # ---------------------------------------------------------------------------
@@ -316,55 +347,91 @@ def e(text: str) -> str:
     return html_mod.escape(text or "", quote=True)
 
 
+def _link_or_span(href: str, inner_html: str, extra_class: str = "") -> str:
+    """有 link 就包 <a>（可点击），否则包 <div>（静态）。"""
+    cls = f"row {extra_class}".strip()
+    if href:
+        return (
+            f'<a class="{cls}" href="{e(href)}" target="_blank" rel="noopener">'
+            f'{inner_html}<span class="chev" aria-hidden="true">›</span>'
+            "</a>"
+        )
+    return f'<div class="{cls} static">{inner_html}</div>'
+
+
 def render_html(ctx: dict[str, Any]) -> str:
     date: datetime = ctx["date"]
     weekday = "一二三四五六日"[date.weekday()]
     date_str = f"{date:%Y 年 %m 月 %d 日} · 星期{weekday}"
 
-    # 热梗
-    meme_items = "\n".join(
-        f'<li class="item"><span class="rank">{i+1:02d}</span>'
-        f'<div class="body">'
-        f'<div class="title">{e(m["title"])}</div>'
-        f'<div class="sub">{e(m["source"])}</div>'
-        f'</div></li>'
-        for i, m in enumerate(ctx["memes"])
-    )
+    # ---- 热梗：每条可点击跳转到对应平台热搜原帖 ----
+    meme_rows = []
+    for i, m in enumerate(ctx["memes"], 1):
+        inner = (
+            f'<span class="rank">{i:02d}</span>'
+            '<div class="main">'
+            f'<div class="title">{e(m["title"])}</div>'
+            f'<div class="sub">{e(m["source"])}</div>'
+            '</div>'
+        )
+        meme_rows.append(_link_or_span(m.get("link", ""), inner, "meme"))
+    meme_items = "\n".join(meme_rows)
 
-    joke_items = "\n".join(
-        f'<li class="joke">{e(j)}</li>' for j in ctx["jokes"]
-    )
+    # ---- 冷笑话：不需要跳转 ----
+    joke_items = "\n".join(f'<div class="joke">{e(j)}</div>' for j in ctx["jokes"])
 
+    # ---- 电影：跳转到豆瓣/猫眼详情 ----
     movie_rows = []
     for m in ctx["movies"]:
         poster = (
             f'<img src="{e(m["cover"])}" alt="" class="poster" loading="lazy">'
-            if m.get("cover") else ""
+            if m.get("cover") else '<div class="poster poster-empty">🎬</div>'
         )
         meta = f'<div class="meta">{e(m["meta"])}</div>' if m.get("meta") else ""
-        movie_rows.append(
-            "<li class=\"movie\">"
-            f"{poster}"
-            "<div class=\"body\">"
-            f"<div class=\"title\">{e(m['title'])}</div>"
-            f"<div class=\"sub\">{e(m['subtitle'])}</div>"
-            f"{meta}"
-            f"<div class=\"tag\">{e(m['source'])}</div>"
-            "</div></li>"
+        inner = (
+            f'{poster}'
+            '<div class="main">'
+            f'<div class="title">{e(m["title"])}</div>'
+            f'<div class="sub"><span class="accent">{e(m["subtitle"])}</span></div>'
+            f'{meta}'
+            f'<div class="tag">{e(m["source"])}</div>'
+            '</div>'
         )
+        movie_rows.append(_link_or_span(m.get("link", ""), inner, "movie"))
     movie_items = "\n".join(movie_rows)
 
-    concert_items = "\n".join(
-        f'<li class="pill">🎤 {e(c)}</li>' for c in ctx["concerts"]
-    )
+    # ---- 演唱会：跳大麦网搜索 ----
+    concert_rows = []
+    for c in ctx["concerts"]:
+        inner = (
+            '<span class="dot concert-dot"></span>'
+            f'<div class="main"><div class="title">{e(c["title"])}</div>'
+            '<div class="sub">大麦网搜索 · 查看场次与票价</div></div>'
+        )
+        concert_rows.append(_link_or_span(c.get("link", ""), inner, "concert"))
+    concert_items = "\n".join(concert_rows)
 
-    travel_items = "\n".join(
-        f'<li class="travel">🧭 {e(t)}</li>' for t in ctx["travels"]
-    )
+    # ---- 旅游：跳小红书搜索 ----
+    travel_rows = []
+    for t in ctx["travels"]:
+        inner = (
+            '<span class="dot travel-dot"></span>'
+            f'<div class="main"><div class="title">{e(t["title"])}</div>'
+            '<div class="sub">小红书搜索 · 查看攻略与游记</div></div>'
+        )
+        travel_rows.append(_link_or_span(t.get("link", ""), inner, "travel"))
+    travel_items = "\n".join(travel_rows)
 
-    news_items = "\n".join(
-        f'<li>{e(n)}</li>' for n in (ctx["news"] or [])[:8]
-    )
+    # ---- 60 秒读世界 ----
+    news_items = "\n".join(f'<li>{e(n)}</li>' for n in (ctx["news"] or [])[:8])
+    news_block = f"""
+  <section class="news-section">
+    <div class="sec-head">
+      <h2>60 秒读懂世界</h2>
+      <div class="count">{min(len(ctx["news"] or []), 8)} 条</div>
+    </div>
+    <ul class="news-list">{news_items}</ul>
+  </section>""" if news_items else ""
 
     cover = e(ctx["cover"])
     generated = f"{datetime.now():%Y-%m-%d %H:%M}"
@@ -373,281 +440,287 @@ def render_html(ctx: dict[str, Any]) -> str:
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="theme-color" content="#0b1020">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0d1424">
 <title>每日热梗·{e(date.strftime('%Y-%m-%d'))}</title>
 <style>
   :root {{
-    --bg-0: #0b1020;
-    --bg-1: #131a2f;
-    --bg-2: #1b2340;
-    --fg: #e7ecf5;
-    --fg-dim: #9aa4bd;
-    --accent: #7c9cff;
-    --accent-2: #ff7ab6;
-    --ok: #5cd3a6;
-    --warn: #ffcf72;
+    --bg: #0d1424;
+    --bg-soft: #151d33;
+    --card: rgba(255,255,255,0.035);
+    --card-border: rgba(255,255,255,0.07);
+    --card-hover: rgba(255,255,255,0.06);
+    --fg: #eef1f8;
+    --fg-2: #b4bdd1;
+    --fg-3: #7d879f;
+    --accent: #ffb86b;
+    --accent-soft: rgba(255,184,107,0.14);
+    --hot: #ff7a7a;
+    --mint: #6ddaa8;
+    --sky: #82b1ff;
+    --divider: rgba(255,255,255,0.06);
   }}
   * {{ box-sizing: border-box; }}
+  html, body {{ margin: 0; padding: 0; }}
   body {{
-    margin: 0;
-    font: 15px/1.7 -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft Yahei", sans-serif;
+    font: 15px/1.65 -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft Yahei", sans-serif;
     color: var(--fg);
-    background: radial-gradient(1200px 600px at 10% -10%, #2a3570 0%, transparent 50%),
-                radial-gradient(1000px 500px at 120% 10%, #7a2e8b 0%, transparent 55%),
-                linear-gradient(180deg, var(--bg-0), #060914 100%);
+    background: var(--bg);
+    background-image:
+      radial-gradient(800px 400px at -10% -10%, rgba(130, 177, 255, 0.08), transparent 60%),
+      radial-gradient(600px 300px at 110% 0%, rgba(255, 184, 107, 0.06), transparent 60%);
     min-height: 100vh;
-    padding: 16px 14px 80px;
+    padding: 20px 16px calc(60px + env(safe-area-inset-bottom));
     -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
   }}
-  .wrap {{ max-width: 680px; margin: 0 auto; }}
+  .wrap {{ max-width: 640px; margin: 0 auto; }}
+  a {{ color: inherit; text-decoration: none; -webkit-tap-highlight-color: transparent; }}
 
-  header {{
-    padding: 8px 4px 20px;
-  }}
+  /* ========== Header ========== */
+  header {{ padding: 4px 4px 16px; }}
   .brand {{
-    font-size: 12px;
-    color: var(--fg-dim);
-    letter-spacing: 2px;
-    margin-bottom: 8px;
-    text-transform: uppercase;
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 11px; letter-spacing: 3px;
+    color: var(--fg-3); text-transform: uppercase;
+    padding: 4px 10px;
+    border: 1px solid var(--card-border);
+    border-radius: 20px;
   }}
   h1 {{
-    margin: 0;
-    font-size: 28px;
-    font-weight: 800;
-    letter-spacing: -0.5px;
-    background: linear-gradient(90deg, #fff, #9fb6ff 60%, #ff9fd2);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+    margin: 14px 0 4px;
+    font-size: 26px; font-weight: 800; letter-spacing: -0.5px;
+    color: var(--fg);
   }}
-  .date {{ color: var(--fg-dim); margin-top: 4px; font-size: 13px; }}
-
+  .date {{
+    color: var(--fg-3); font-size: 13px;
+    font-family: "SF Mono", "Menlo", monospace;
+  }}
   .cover {{
-    margin-top: 12px;
-    border-radius: 16px;
+    margin-top: 18px;
+    border-radius: 14px;
     overflow: hidden;
     aspect-ratio: 1068/455;
-    background: #222 center/cover no-repeat url('{cover}');
-    box-shadow: 0 10px 40px -10px rgba(124, 156, 255, 0.35);
-    position: relative;
-  }}
-  .cover::after {{
-    content: '';
-    position: absolute; inset: 0;
-    background: linear-gradient(180deg, transparent 50%, rgba(0,0,0,0.45));
+    background: var(--bg-soft) center/cover no-repeat url('{cover}');
+    box-shadow: 0 14px 40px -16px rgba(0,0,0,0.6);
   }}
 
+  /* ========== Section ========== */
   section {{
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    backdrop-filter: blur(10px);
-    border-radius: 18px;
-    padding: 18px 16px;
-    margin-top: 16px;
+    margin-top: 22px;
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    padding: 4px 0;
+    overflow: hidden;
   }}
   .sec-head {{
-    display: flex;
-    align-items: center;
+    display: flex; align-items: center;
+    padding: 14px 18px 6px;
     gap: 10px;
-    margin-bottom: 12px;
-  }}
-  .sec-head .icon {{
-    width: 36px; height: 36px;
-    border-radius: 10px;
-    display: grid; place-items: center;
-    font-size: 18px;
-    background: linear-gradient(135deg, rgba(124,156,255,0.25), rgba(255,122,182,0.25));
-    border: 1px solid rgba(255,255,255,0.08);
   }}
   .sec-head h2 {{
     margin: 0;
-    font-size: 17px;
-    font-weight: 700;
+    font-size: 13px; font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--fg-2);
+    text-transform: uppercase;
   }}
   .sec-head .count {{
     margin-left: auto;
-    color: var(--fg-dim);
-    font-size: 12px;
+    color: var(--fg-3); font-size: 12px;
+    font-family: "SF Mono", "Menlo", monospace;
   }}
 
-  ul {{ list-style: none; margin: 0; padding: 0; }}
-
-  .item {{
-    display: flex;
-    gap: 12px;
-    padding: 10px 0;
-    border-top: 1px solid rgba(255,255,255,0.05);
+  /* ========== Row (可点击条目通用样式) ========== */
+  .row {{
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 18px;
+    border-top: 1px solid var(--divider);
+    transition: background 0.18s ease;
+    position: relative;
   }}
-  .item:first-child {{ border-top: none; padding-top: 2px; }}
-  .rank {{
+  .row:first-of-type {{ border-top: 1px solid var(--divider); }}
+  .sec-head + .row {{ border-top: 1px solid var(--divider); }}
+  a.row:hover,
+  a.row:active {{ background: var(--card-hover); }}
+  .row.static {{ cursor: default; }}
+  .row .main {{ flex: 1; min-width: 0; }}
+  .row .title {{
+    font-weight: 600; font-size: 15px; color: var(--fg);
+    line-height: 1.5; word-break: break-word;
+  }}
+  .row .sub {{
+    margin-top: 3px;
+    font-size: 12px; color: var(--fg-3);
+  }}
+  .row .sub .accent {{ color: var(--accent); font-weight: 600; }}
+  .row .chev {{
+    flex: 0 0 auto;
+    color: var(--fg-3);
+    font-size: 22px; line-height: 1;
+    font-family: "SF Mono", "Menlo", monospace;
+    opacity: 0.6;
+    transition: transform 0.18s ease, opacity 0.18s ease;
+  }}
+  a.row:hover .chev {{ opacity: 1; transform: translateX(2px); color: var(--accent); }}
+
+  /* ========== 热梗 ========== */
+  .meme .rank {{
     flex: 0 0 28px;
-    color: var(--accent);
+    font-family: "SF Mono", "Menlo", monospace;
     font-weight: 700;
-    font-family: "SF Mono", Menlo, monospace;
-    font-size: 15px;
-  }}
-  .item .body {{ flex: 1; min-width: 0; }}
-  .item .title {{
-    font-weight: 600;
-    line-height: 1.5;
-    word-break: break-word;
-  }}
-  .item .sub {{
-    color: var(--fg-dim);
-    font-size: 12px;
-    margin-top: 2px;
+    font-size: 14px;
+    color: var(--hot);
+    letter-spacing: 0;
   }}
 
+  /* ========== 冷笑话 ========== */
   .joke {{
-    padding: 12px 14px;
-    background: linear-gradient(135deg, rgba(255,207,114,0.08), rgba(255,122,182,0.08));
-    border-left: 3px solid var(--warn);
-    border-radius: 10px;
-    margin-bottom: 10px;
-    color: #f3e8c8;
+    padding: 14px 18px;
+    border-top: 1px solid var(--divider);
+    color: var(--fg);
+    font-size: 14.5px;
+    line-height: 1.75;
+    position: relative;
   }}
-  .joke:last-child {{ margin-bottom: 0; }}
+  .joke::before {{
+    content: '"';
+    display: inline-block;
+    color: var(--accent);
+    font-size: 28px;
+    line-height: 0.8;
+    margin-right: 6px;
+    font-weight: 700;
+    vertical-align: -8px;
+  }}
 
-  .movie {{
-    display: flex;
-    gap: 12px;
-    padding: 12px 0;
-    border-top: 1px solid rgba(255,255,255,0.05);
-  }}
-  .movie:first-child {{ border-top: none; padding-top: 2px; }}
-  .poster {{
-    flex: 0 0 68px;
-    width: 68px; height: 96px;
+  /* ========== 电影 ========== */
+  .movie .poster {{
+    flex: 0 0 64px;
+    width: 64px; height: 88px;
     object-fit: cover;
     border-radius: 8px;
-    background: #222;
+    background: var(--bg-soft);
+    box-shadow: 0 4px 12px -4px rgba(0,0,0,0.5);
   }}
-  .movie .body {{ flex: 1; display: flex; flex-direction: column; gap: 3px; }}
-  .movie .title {{ font-weight: 700; font-size: 16px; }}
-  .movie .sub {{ color: var(--accent); font-size: 13px; }}
-  .movie .meta {{ color: var(--fg-dim); font-size: 12px; }}
+  .movie .poster-empty {{
+    display: grid; place-items: center;
+    color: var(--fg-3); font-size: 24px;
+  }}
+  .movie .main {{ display: flex; flex-direction: column; gap: 4px; min-height: 88px; }}
+  .movie .title {{ font-size: 16px; font-weight: 700; }}
+  .movie .meta {{ font-size: 12px; color: var(--fg-3); }}
   .movie .tag {{
-    display: inline-block;
+    align-self: flex-start;
     margin-top: auto;
     padding: 2px 8px;
-    background: rgba(124,156,255,0.15);
+    background: var(--accent-soft);
     color: var(--accent);
     font-size: 11px;
-    border-radius: 6px;
-    width: fit-content;
+    border-radius: 999px;
+    font-weight: 600;
   }}
 
-  .pill {{
-    display: block;
-    padding: 12px 14px;
-    margin-bottom: 8px;
-    background: rgba(255,255,255,0.04);
-    border-radius: 12px;
-    border: 1px solid rgba(255,255,255,0.05);
+  /* ========== 演唱会 & 旅游 ========== */
+  .dot {{
+    flex: 0 0 8px;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    margin-left: 4px;
   }}
-  .pill:last-child {{ margin-bottom: 0; }}
+  .concert-dot {{ background: var(--sky); box-shadow: 0 0 10px rgba(130,177,255,0.5); }}
+  .travel-dot  {{ background: var(--mint); box-shadow: 0 0 10px rgba(109,218,168,0.5); }}
 
-  .travel {{
-    display: block;
-    padding: 12px 14px;
-    margin-bottom: 8px;
-    background: linear-gradient(135deg, rgba(92,211,166,0.08), rgba(124,156,255,0.08));
-    border-radius: 12px;
-    border-left: 3px solid var(--ok);
+  /* ========== 60 秒 ========== */
+  .news-section {{ margin-top: 22px; }}
+  .news-list {{
+    list-style: none;
+    margin: 0; padding: 8px 18px 14px;
   }}
-  .travel:last-child {{ margin-bottom: 0; }}
-
-  .news-section {{
-    background: rgba(255,255,255,0.02);
-  }}
-  .news-section ul {{ padding-left: 18px; list-style: disc; }}
-  .news-section li {{
-    color: var(--fg-dim);
+  .news-list li {{
+    position: relative;
+    padding: 6px 0 6px 16px;
+    color: var(--fg-2);
     font-size: 13px;
-    line-height: 1.8;
-    margin-bottom: 2px;
+    line-height: 1.75;
+  }}
+  .news-list li::before {{
+    content: '';
+    position: absolute;
+    left: 0; top: 14px;
+    width: 6px; height: 6px;
+    background: var(--fg-3);
+    border-radius: 50%;
   }}
 
+  /* ========== Footer ========== */
   footer {{
+    margin-top: 32px;
     text-align: center;
-    color: var(--fg-dim);
+    color: var(--fg-3);
     font-size: 12px;
-    margin-top: 28px;
-    padding: 0 12px;
-    line-height: 1.9;
+    line-height: 2;
+    font-family: "SF Mono", "Menlo", monospace;
   }}
-  footer a {{ color: var(--accent); text-decoration: none; }}
+  footer .sources {{ color: var(--fg-3); }}
+  footer a {{ color: var(--accent); }}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
-    <div class="brand">DAILY DIGEST · 每日精选</div>
-    <h1>🌿 今日热梗 · 生活资讯</h1>
+    <div class="brand">Daily Digest</div>
+    <h1>今日热梗·生活资讯</h1>
     <div class="date">{e(date_str)}</div>
     <div class="cover"></div>
   </header>
 
   <section>
     <div class="sec-head">
-      <div class="icon">🔥</div>
-      <h2>今日热梗</h2>
-      <div class="count">{len(ctx["memes"])} 条</div>
+      <h2>🔥 今日热梗</h2>
+      <div class="count">{len(ctx["memes"])} 条 · 点击查看原帖</div>
     </div>
-    <ul>{meme_items}</ul>
+    {meme_items}
   </section>
 
   <section>
     <div class="sec-head">
-      <div class="icon">😄</div>
-      <h2>冷笑话·摸鱼时间</h2>
+      <h2>😄 冷笑话</h2>
       <div class="count">{len(ctx["jokes"])} 条</div>
     </div>
-    <ul>{joke_items}</ul>
+    {joke_items}
   </section>
 
   <section>
     <div class="sec-head">
-      <div class="icon">🎬</div>
-      <h2>电影榜单</h2>
-      <div class="count">{len(ctx["movies"])} 部</div>
+      <h2>🎬 电影榜单</h2>
+      <div class="count">{len(ctx["movies"])} 部 · 点击看详情</div>
     </div>
-    <ul>{movie_items}</ul>
+    {movie_items}
   </section>
 
   <section>
     <div class="sec-head">
-      <div class="icon">🎤</div>
-      <h2>本月演唱会</h2>
+      <h2>🎤 本月演唱会</h2>
       <div class="count">{len(ctx["concerts"])} 场</div>
     </div>
-    <ul>{concert_items}</ul>
+    {concert_items}
   </section>
 
   <section>
     <div class="sec-head">
-      <div class="icon">🧳</div>
-      <h2>本季旅游目的地</h2>
+      <h2>🧳 本季旅游目的地</h2>
       <div class="count">{len(ctx["travels"])} 处</div>
     </div>
-    <ul>{travel_items}</ul>
+    {travel_items}
   </section>
 
-  {"" if not news_items else f'''
-  <section class="news-section">
-    <div class="sec-head">
-      <div class="icon">📰</div>
-      <h2>60 秒读懂世界</h2>
-    </div>
-    <ul>{news_items}</ul>
-  </section>
-  '''}
+  {news_block}
 
   <footer>
-    数据来源：微博 / 抖音 / 知乎 / B 站 / 猫眼 / 豆瓣 / 60s<br>
-    生成时间 {e(generated)}｜<a href="./">归档</a>
+    <div class="sources">微博 · 抖音 · 知乎 · B 站 · 猫眼 · 豆瓣 · 60s</div>
+    <div>生成于 {e(generated)} · <a href="./">往期归档</a></div>
   </footer>
 </div>
 </body>
@@ -699,7 +772,7 @@ def send_template_card(ctx: dict[str, Any], page_url: str) -> bool:
     if ctx["travels"]:
         preview_rows.append({
             "keyname": "🧳 旅游",
-            "value": _truncate(ctx["travels"][0], 20),
+            "value": _truncate(ctx["travels"][0]["title"], 20),
         })
 
     quote_text = ""
@@ -778,11 +851,11 @@ def send_markdown_fallback(ctx: dict[str, Any]) -> bool:
 
     lines.append("\n## 🎤 演唱会")
     for c in ctx["concerts"]:
-        lines.append(f"- {c}")
+        lines.append(f"- {c['title']}")
 
     lines.append("\n## 🧳 旅游推荐")
     for t in ctx["travels"]:
-        lines.append(f"- {t}")
+        lines.append(f"- {t['title']}")
 
     lines.append("\n> <font color=\"comment\">云端部署后会收到精美 HTML 页面链接 ✨</font>")
 
