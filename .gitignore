@@ -1,0 +1,15 @@
+# 日志
+*.log
+
+# Python 缓存
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# macOS
+.DS_Store
+
+# 本地 launchd 相关（只在本机有意义）
+com.hmd.dailypush.plist
+install.sh

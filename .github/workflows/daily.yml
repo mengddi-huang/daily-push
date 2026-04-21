@@ -1,0 +1,67 @@
+name: Daily Push
+
+# 每天北京时间 10:00 触发（UTC 02:00）
+on:
+  schedule:
+    - cron: "0 2 * * *"
+  workflow_dispatch:     # 支持在 GitHub UI 手动触发
+
+# 允许 workflow push 归档 HTML
+permissions:
+  contents: write
+
+concurrency:
+  group: daily-push
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # 需要完整历史才能 push
+          fetch-depth: 0
+          # 使用 GITHUB_TOKEN 以便后续 push
+          persist-credentials: true
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Set Beijing Time
+        run: |
+          sudo ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+          echo "TZ=Asia/Shanghai" >> $GITHUB_ENV
+
+      - name: Generate HTML
+        env:
+          MODE: html
+        run: python daily_push.py
+
+      - name: Commit archives to main
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/
+          if git diff --staged --quiet; then
+            echo "无新内容，跳过 commit"
+          else
+            git commit -m "chore(daily): $(date +'%Y-%m-%d')"
+            git push
+          fi
+
+      - name: Wait for GitHub Pages deploy
+        run: |
+          echo "等待 Pages 部署生效..."
+          sleep 90
+
+      - name: Push to WeChat Work
+        env:
+          MODE: push
+          WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
+          PAGES_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}
+        run: python daily_push.py

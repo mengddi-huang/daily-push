@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0b1020">
+<title>每日热梗·2026-04-21</title>
+<style>
+  :root {
+    --bg-0: #0b1020;
+    --bg-1: #131a2f;
+    --bg-2: #1b2340;
+    --fg: #e7ecf5;
+    --fg-dim: #9aa4bd;
+    --accent: #7c9cff;
+    --accent-2: #ff7ab6;
+    --ok: #5cd3a6;
+    --warn: #ffcf72;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font: 15px/1.7 -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft Yahei", sans-serif;
+    color: var(--fg);
+    background: radial-gradient(1200px 600px at 10% -10%, #2a3570 0%, transparent 50%),
+                radial-gradient(1000px 500px at 120% 10%, #7a2e8b 0%, transparent 55%),
+                linear-gradient(180deg, var(--bg-0), #060914 100%);
+    min-height: 100vh;
+    padding: 16px 14px 80px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 680px; margin: 0 auto; }
+
+  header {
+    padding: 8px 4px 20px;
+  }
+  .brand {
+    font-size: 12px;
+    color: var(--fg-dim);
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+  h1 {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    background: linear-gradient(90deg, #fff, #9fb6ff 60%, #ff9fd2);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .date { color: var(--fg-dim); margin-top: 4px; font-size: 13px; }
+
+  .cover {
+    margin-top: 12px;
+    border-radius: 16px;
+    overflow: hidden;
+    aspect-ratio: 1068/455;
+    background: #222 center/cover no-repeat url('https://cdn.jsdmirror.com/gh/vikiboss/60s-static-host@main/static/images/2026-04-21.png');
+    box-shadow: 0 10px 40px -10px rgba(124, 156, 255, 0.35);
+    position: relative;
+  }
+  .cover::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg, transparent 50%, rgba(0,0,0,0.45));
+  }
+
+  section {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(10px);
+    border-radius: 18px;
+    padding: 18px 16px;
+    margin-top: 16px;
+  }
+  .sec-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .sec-head .icon {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    display: grid; place-items: center;
+    font-size: 18px;
+    background: linear-gradient(135deg, rgba(124,156,255,0.25), rgba(255,122,182,0.25));
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .sec-head h2 {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 700;
+  }
+  .sec-head .count {
+    margin-left: auto;
+    color: var(--fg-dim);
+    font-size: 12px;
+  }
+
+  ul { list-style: none; margin: 0; padding: 0; }
+
+  .item {
+    display: flex;
+    gap: 12px;
+    padding: 10px 0;
+    border-top: 1px solid rgba(255,255,255,0.05);
+  }
+  .item:first-child { border-top: none; padding-top: 2px; }
+  .rank {
+    flex: 0 0 28px;
+    color: var(--accent);
+    font-weight: 700;
+    font-family: "SF Mono", Menlo, monospace;
+    font-size: 15px;
+  }
+  .item .body { flex: 1; min-width: 0; }
+  .item .title {
+    font-weight: 600;
+    line-height: 1.5;
+    word-break: break-word;
+  }
+  .item .sub {
+    color: var(--fg-dim);
+    font-size: 12px;
+    margin-top: 2px;
+  }
+
+  .joke {
+    padding: 12px 14px;
+    background: linear-gradient(135deg, rgba(255,207,114,0.08), rgba(255,122,182,0.08));
+    border-left: 3px solid var(--warn);
+    border-radius: 10px;
+    margin-bottom: 10px;
+    color: #f3e8c8;
+  }
+  .joke:last-child { margin-bottom: 0; }
+
+  .movie {
+    display: flex;
+    gap: 12px;
+    padding: 12px 0;
+    border-top: 1px solid rgba(255,255,255,0.05);
+  }
+  .movie:first-child { border-top: none; padding-top: 2px; }
+  .poster {
+    flex: 0 0 68px;
+    width: 68px; height: 96px;
+    object-fit: cover;
+    border-radius: 8px;
+    background: #222;
+  }
+  .movie .body { flex: 1; display: flex; flex-direction: column; gap: 3px; }
+  .movie .title { font-weight: 700; font-size: 16px; }
+  .movie .sub { color: var(--accent); font-size: 13px; }
+  .movie .meta { color: var(--fg-dim); font-size: 12px; }
+  .movie .tag {
+    display: inline-block;
+    margin-top: auto;
+    padding: 2px 8px;
+    background: rgba(124,156,255,0.15);
+    color: var(--accent);
+    font-size: 11px;
+    border-radius: 6px;
+    width: fit-content;
+  }
+
+  .pill {
+    display: block;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.05);
+  }
+  .pill:last-child { margin-bottom: 0; }
+
+  .travel {
+    display: block;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    background: linear-gradient(135deg, rgba(92,211,166,0.08), rgba(124,156,255,0.08));
+    border-radius: 12px;
+    border-left: 3px solid var(--ok);
+  }
+  .travel:last-child { margin-bottom: 0; }
+
+  .news-section {
+    background: rgba(255,255,255,0.02);
+  }
+  .news-section ul { padding-left: 18px; list-style: disc; }
+  .news-section li {
+    color: var(--fg-dim);
+    font-size: 13px;
+    line-height: 1.8;
+    margin-bottom: 2px;
+  }
+
+  footer {
+    text-align: center;
+    color: var(--fg-dim);
+    font-size: 12px;
+    margin-top: 28px;
+    padding: 0 12px;
+    line-height: 1.9;
+  }
+  footer a { color: var(--accent); text-decoration: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">DAILY DIGEST · 每日精选</div>
+    <h1>🌿 今日热梗 · 生活资讯</h1>
+    <div class="date">2026 年 04 月 21 日 · 星期二</div>
+    <div class="cover"></div>
+  </header>
+
+  <section>
+    <div class="sec-head">
+      <div class="icon">🔥</div>
+      <h2>今日热梗</h2>
+      <div class="count">3 条</div>
+    </div>
+    <ul><li class="item"><span class="rank">01</span><div class="body"><div class="title">谷爱凌劳伦斯红毯造型</div><div class="sub">微博热搜</div></div></li>
+<li class="item"><span class="rank">02</span><div class="body"><div class="title">无限超越班这场婚宴闹剧太抓马了</div><div class="sub">抖音热搜</div></div></li>
+<li class="item"><span class="rank">03</span><div class="body"><div class="title">爱奇艺CEO龚宇发声</div><div class="sub">微博热搜</div></div></li></ul>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <div class="icon">😄</div>
+      <h2>冷笑话·摸鱼时间</h2>
+      <div class="count">2 条</div>
+    </div>
+    <ul><li class="joke">时间就像胸，挤挤就有了，躺下就没了。</li>
+<li class="joke">人生最大的耻辱是什么，考试作弊了还不及格。</li></ul>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <div class="icon">🎬</div>
+      <h2>电影榜单</h2>
+      <div class="count">2 部</div>
+    </div>
+    <ul><li class="movie"><div class="body"><div class="title">我，许可</div><div class="sub">上映19天</div><div class="meta">累计票房 1.63亿</div><div class="tag">猫眼实时榜</div></div></li>
+<li class="movie"><img src="https://doubanio.viki.moe/view/photo/m_ratio_poster/public/p2931370692.jpg" alt="" class="poster" loading="lazy"><div class="body"><div class="title">挽救计划</div><div class="sub">豆瓣 8.6</div><div class="meta">剧情 科幻 惊悚 / 菲尔·罗德 克里斯托弗·米勒</div><div class="tag">豆瓣每周榜</div></div></li></ul>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <div class="icon">🎤</div>
+      <h2>本月演唱会</h2>
+      <div class="count">1 场</div>
+    </div>
+    <ul><li class="pill">🎤 周杰伦「嘉年华」世界巡演</li></ul>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <div class="icon">🧳</div>
+      <h2>本季旅游目的地</h2>
+      <div class="count">2 处</div>
+    </div>
+    <ul><li class="travel">🧭 新疆伊犁杏花沟·4 月中下旬粉色花海</li>
+<li class="travel">🧭 贵州万峰林 + 马岭河峡谷·春日喀斯特地貌云海</li></ul>
+  </section>
+
+  
+  <section class="news-section">
+    <div class="sec-head">
+      <div class="icon">📰</div>
+      <h2>60 秒读懂世界</h2>
+    </div>
+    <ul><li>2025 年我国人均阅读纸质书 4.81 本，较 2024 年增加 0.02 本；人均每天接触手机超 109 分钟，比 2024 年增加 0.78 分钟</li>
+<li>湖南试点学生运动能力达标：对应年级学生须达相应运动等级</li>
+<li>一季度全社会用电量同比增长 5.2%，专家称：第二产业成用电量增长主要拉动力</li>
+<li>餐饮业指数连续下行，中国烹饪协会：平台大额补贴正在破坏行业生态</li>
+<li>机构预测国内油价 21 日 24 时或迎年内首降，加满一箱 92 号汽油预计将少花约 20 元</li>
+<li>近 70 款车集体降价，覆盖新能源与燃油车，平均降价金额达 3.7 万元，最高降幅直逼 17 万</li>
+<li>中国脑机接口迈向临床应用：“北脑一号” 已完成 10 例人体植入，安全工作时长超过 45000 小时</li>
+<li>爱奇艺宣布超 100 位艺人同意入驻 AI 艺人库，CEO 称将提高演员拍摄效率，张若昀等多名艺人均否认签约 AI 授权</li></ul>
+  </section>
+  
+
+  <footer>
+    数据来源：微博 / 抖音 / 知乎 / B 站 / 猫眼 / 豆瓣 / 60s<br>
+    生成时间 2026-04-21 11:30｜<a href="./">归档</a>
+  </footer>
+</div>
+</body>
+</html>
