@@ -824,10 +824,10 @@ def render_html(ctx: dict[str, Any]) -> str:
 <title>每日热梗·{e(date.strftime('%Y-%m-%d'))}</title>
 <style>
   :root {{
-    --bg: #0b1020;
-    --bg-2: #0f1630;
+    --bg: #08091a;
+    --bg-2: #0d0f24;
     --bg-soft: #151d33;
-    --card: rgba(255,255,255,0.035);
+    --card: rgba(16,18,40,0.55);
     --card-border: rgba(255,255,255,0.08);
     --card-hover: rgba(255,255,255,0.06);
     --fg: #eef1f8;
@@ -849,7 +849,8 @@ def render_html(ctx: dict[str, Any]) -> str:
   body {{
     font: 15px/1.65 -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft Yahei", sans-serif;
     color: var(--fg);
-    background: var(--bg);
+    background:
+      radial-gradient(ellipse at top, #14102a 0%, var(--bg) 45%, #05061a 100%);
     min-height: 100vh;
     padding: 20px 16px calc(80px + env(safe-area-inset-bottom));
     -webkit-font-smoothing: antialiased;
@@ -858,46 +859,111 @@ def render_html(ctx: dict[str, Any]) -> str:
     position: relative;
   }}
 
-  /* ========== 背景：两团呼吸渐变 + 粒子层 ========== */
-  .bg-gradient {{
+  /* ========== 背景层叠：极光 + 鎏金液体 blob ========== */
+  /* --- 极光层（conic-gradient 缓慢旋转）--- */
+  .aurora {{
+    position: fixed;
+    top: -30%; left: -30%;
+    width: 160%; height: 160%;
+    z-index: -3;
+    pointer-events: none;
+    background:
+      conic-gradient(from 210deg at 50% 40%,
+        transparent 0deg,
+        rgba(255,184,107,0.18) 40deg,
+        rgba(255,122,158,0.22) 80deg,
+        rgba(182,138,255,0.18) 130deg,
+        rgba(130,177,255,0.14) 180deg,
+        transparent 240deg,
+        transparent 360deg);
+    filter: blur(60px) saturate(1.35);
+    opacity: 0.9;
+    animation: aurora-spin 50s linear infinite;
+    will-change: transform;
+  }}
+  @keyframes aurora-spin {{
+    from {{ transform: rotate(0deg) scale(1); }}
+    50%  {{ transform: rotate(180deg) scale(1.1); }}
+    to   {{ transform: rotate(360deg) scale(1); }}
+  }}
+
+  /* --- 液体鎏金 blob 层 --- */
+  .liquid {{
     position: fixed; inset: 0;
     z-index: -2;
     pointer-events: none;
     overflow: hidden;
+    filter: blur(50px) saturate(1.4);
   }}
-  .bg-gradient::before,
-  .bg-gradient::after {{
-    content: '';
+  .liquid .blob {{
     position: absolute;
     border-radius: 50%;
-    filter: blur(80px);
-    will-change: transform, opacity;
+    mix-blend-mode: screen;
+    will-change: transform;
   }}
-  .bg-gradient::before {{
+  .blob-1 {{
     width: 520px; height: 520px;
-    top: -80px; left: -120px;
-    background: radial-gradient(circle, rgba(130,177,255,0.28), transparent 60%);
-    animation: breathe1 18s ease-in-out infinite;
+    top: -120px; left: -100px;
+    background: radial-gradient(circle, #ffb86b 0%, rgba(255,184,107,0) 70%);
+    animation: float1 22s ease-in-out infinite;
   }}
-  .bg-gradient::after {{
-    width: 480px; height: 480px;
-    top: 40%; right: -120px;
-    background: radial-gradient(circle, rgba(255,184,107,0.22), transparent 60%);
-    animation: breathe2 22s ease-in-out infinite;
+  .blob-2 {{
+    width: 460px; height: 460px;
+    top: 28%; right: -140px;
+    background: radial-gradient(circle, #ff7a9e 0%, rgba(255,122,158,0) 70%);
+    animation: float2 26s ease-in-out infinite;
   }}
-  @keyframes breathe1 {{
-    0%, 100% {{ transform: translate(0,0) scale(1); opacity: 0.55; }}
-    50%      {{ transform: translate(30px,30px) scale(1.12); opacity: 0.85; }}
+  .blob-3 {{
+    width: 400px; height: 400px;
+    bottom: -60px; left: 18%;
+    background: radial-gradient(circle, #b68aff 0%, rgba(182,138,255,0) 70%);
+    animation: float3 30s ease-in-out infinite;
   }}
-  @keyframes breathe2 {{
-    0%, 100% {{ transform: translate(0,0) scale(1); opacity: 0.5; }}
-    50%      {{ transform: translate(-40px,-20px) scale(1.08); opacity: 0.75; }}
+  .blob-4 {{
+    width: 340px; height: 340px;
+    top: 48%; left: 30%;
+    background: radial-gradient(circle, #ffd93d 0%, rgba(255,217,61,0) 70%);
+    animation: float4 34s ease-in-out infinite;
+    opacity: 0.7;
   }}
-  #particles {{
-    position: fixed; inset: 0;
+  @keyframes float1 {{
+    0%,100% {{ transform: translate(0,0) scale(1); }}
+    33%     {{ transform: translate(80px,120px) scale(1.15); }}
+    66%     {{ transform: translate(-40px,60px) scale(0.85); }}
+  }}
+  @keyframes float2 {{
+    0%,100% {{ transform: translate(0,0) scale(1); }}
+    33%     {{ transform: translate(-80px,-60px) scale(1.1); }}
+    66%     {{ transform: translate(40px,80px) scale(0.9); }}
+  }}
+  @keyframes float3 {{
+    0%,100% {{ transform: translate(0,0) scale(1); }}
+    33%     {{ transform: translate(100px,-80px) scale(1.2); }}
+    66%     {{ transform: translate(-60px,40px) scale(0.9); }}
+  }}
+  @keyframes float4 {{
+    0%,100% {{ transform: translate(0,0) scale(1); opacity: 0.7; }}
+    50%     {{ transform: translate(-120px,-60px) scale(1.1); opacity: 0.9; }}
+  }}
+
+  /* --- 极细斜向光束（极光感的顶层）--- */
+  .sheen {{
+    position: fixed; inset: -20%;
     z-index: -1;
     pointer-events: none;
-    opacity: 0.6;
+    background:
+      linear-gradient(115deg,
+        transparent 35%,
+        rgba(255,255,255,0.04) 48%,
+        rgba(255,217,161,0.10) 52%,
+        rgba(255,255,255,0.04) 56%,
+        transparent 68%);
+    animation: sheen-slide 14s ease-in-out infinite;
+    mix-blend-mode: screen;
+  }}
+  @keyframes sheen-slide {{
+    0%,100% {{ transform: translateX(-10%); opacity: 0.6; }}
+    50%     {{ transform: translateX(10%);  opacity: 1;   }}
   }}
 
   /* ========== 顶部滚动进度条 ========== */
@@ -994,16 +1060,36 @@ def render_html(ctx: dict[str, Any]) -> str:
   /* ========== Section ========== */
   section {{
     margin-top: 18px;
-    background: var(--card);
-    border: 1px solid var(--card-border);
+    position: relative;
+    /* 双层背景：卡片底色 (padding-box) + 鎏金流动边框 (border-box) */
+    background:
+      linear-gradient(var(--card), var(--card)) padding-box,
+      linear-gradient(135deg,
+        rgba(255,184,107,0.55) 0%,
+        rgba(255,122,158,0.35) 25%,
+        rgba(182,138,255,0.45) 50%,
+        rgba(130,177,255,0.30) 75%,
+        rgba(255,184,107,0.55) 100%) border-box;
+    background-size: 100% 100%, 300% 300%;
+    border: 1px solid transparent;
     border-radius: 18px;
     padding: 4px 0;
     overflow: hidden;
-    backdrop-filter: blur(6px);
+    backdrop-filter: blur(14px) saturate(1.3);
+    -webkit-backdrop-filter: blur(14px) saturate(1.3);
+    box-shadow:
+      0 20px 50px -30px rgba(0,0,0,0.6),
+      0 0 0 1px rgba(255,255,255,0.02) inset,
+      0 40px 80px -60px rgba(255,184,107,0.3);
     opacity: 0;
     transform: translateY(18px);
     transition: opacity 0.7s cubic-bezier(.2,.8,.2,1),
                 transform 0.7s cubic-bezier(.2,.8,.2,1);
+    animation: border-flow 18s linear infinite;
+  }}
+  @keyframes border-flow {{
+    0%   {{ background-position: 0 0, 0% 50%;   }}
+    100% {{ background-position: 0 0, 300% 50%; }}
   }}
   section.revealed {{ opacity: 1; transform: translateY(0); }}
   section.collapsed .sec-body {{ display: none; }}
@@ -1360,14 +1446,28 @@ def render_html(ctx: dict[str, Any]) -> str:
       animation-iteration-count: 1 !important;
       transition-duration: 0.01s !important;
     }}
-    #particles, .bg-gradient {{ display: none; }}
+    .aurora, .liquid, .sheen {{ display: none; }}
+  }}
+
+  /* 小屏性能优化：减少背景模糊量级 */
+  @media (max-width: 480px) {{
+    .aurora {{ filter: blur(40px) saturate(1.2); }}
+    .liquid {{ filter: blur(35px) saturate(1.2); }}
+    .blob-4 {{ display: none; }}
   }}
 </style>
 </head>
 <body>
 <div class="scroll-progress" id="scrollProgress"></div>
-<div class="bg-gradient" aria-hidden="true"></div>
-<canvas id="particles" aria-hidden="true"></canvas>
+
+<div class="aurora" aria-hidden="true"></div>
+<div class="liquid" aria-hidden="true">
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+  <div class="blob blob-4"></div>
+</div>
+<div class="sheen" aria-hidden="true"></div>
 
 <div class="wrap">
   <header>
@@ -1551,60 +1651,11 @@ def render_html(ctx: dict[str, Any]) -> str:
     }});
   }});
 
-  // ---------- 7) 背景粒子（Canvas 轻量）----------
-  var canvas = document.getElementById('particles');
-  var ctx2 = canvas.getContext('2d');
-  var DPR = Math.min(window.devicePixelRatio || 1, 2);
-  var particles = [];
-  var PN = 24;
-
-  function resize() {{
-    canvas.width = window.innerWidth * DPR;
-    canvas.height = window.innerHeight * DPR;
-    canvas.style.width = window.innerWidth + 'px';
-    canvas.style.height = window.innerHeight + 'px';
-  }}
-  resize();
-  window.addEventListener('resize', resize);
-
-  for (var i = 0; i < PN; i++) {{
-    particles.push({{
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height,
-      r: (Math.random() * 1.6 + 0.4) * DPR,
-      vx: (Math.random() - 0.5) * 0.25 * DPR,
-      vy: (Math.random() - 0.5) * 0.25 * DPR,
-      hue: [200, 30, 340, 160][Math.floor(Math.random() * 4)],
-      alpha: Math.random() * 0.4 + 0.2,
-    }});
-  }}
-
-  var raf;
-  function loop() {{
-    ctx2.clearRect(0, 0, canvas.width, canvas.height);
-    particles.forEach(function(p) {{
-      p.x += p.vx; p.y += p.vy;
-      if (p.x < 0) p.x = canvas.width;
-      if (p.x > canvas.width) p.x = 0;
-      if (p.y < 0) p.y = canvas.height;
-      if (p.y > canvas.height) p.y = 0;
-      ctx2.beginPath();
-      ctx2.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-      ctx2.fillStyle = 'hsla(' + p.hue + ',70%,70%,' + p.alpha + ')';
-      ctx2.shadowBlur = 8;
-      ctx2.shadowColor = 'hsla(' + p.hue + ',70%,70%,0.6)';
-      ctx2.fill();
-    }});
-    raf = requestAnimationFrame(loop);
-  }}
-  if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {{
-    loop();
-  }}
-
-  // ---------- 8) 轻量视差：背景层随滚动偏移 ----------
-  var bg = document.querySelector('.bg-gradient');
+  // ---------- 7) 轻量视差：液体层随滚动反向偏移（极光保持自转）----------
+  var liquid = document.querySelector('.liquid');
   window.addEventListener('scroll', function() {{
-    if (bg) bg.style.transform = 'translateY(' + (window.scrollY * -0.08) + 'px)';
+    var y = window.scrollY;
+    if (liquid) liquid.style.transform = 'translate3d(0,' + (y * -0.08) + 'px,0)';
   }}, {{ passive: true }});
 }})();
 </script>
