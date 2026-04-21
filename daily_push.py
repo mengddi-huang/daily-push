@@ -850,7 +850,7 @@ def render_html(ctx: dict[str, Any]) -> str:
     font: 15px/1.65 -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft Yahei", sans-serif;
     color: var(--fg);
     background:
-      radial-gradient(ellipse at top, #14102a 0%, var(--bg) 45%, #05061a 100%);
+      radial-gradient(ellipse 1200px 800px at 50% -10%, #0c0d20 0%, #05051a 60%, #030312 100%);
     min-height: 100vh;
     padding: 20px 16px calc(80px + env(safe-area-inset-bottom));
     -webkit-font-smoothing: antialiased;
@@ -859,111 +859,38 @@ def render_html(ctx: dict[str, Any]) -> str:
     position: relative;
   }}
 
-  /* ========== 背景层叠：极光 + 鎏金液体 blob ========== */
-  /* --- 极光层（conic-gradient 缓慢旋转）--- */
-  .aurora {{
+  /* ========== 星空 Canvas ========== */
+  #starfield {{
     position: fixed;
-    top: -30%; left: -30%;
-    width: 160%; height: 160%;
-    z-index: -3;
-    pointer-events: none;
-    background:
-      conic-gradient(from 210deg at 50% 40%,
-        transparent 0deg,
-        rgba(255,184,107,0.18) 40deg,
-        rgba(255,122,158,0.22) 80deg,
-        rgba(182,138,255,0.18) 130deg,
-        rgba(130,177,255,0.14) 180deg,
-        transparent 240deg,
-        transparent 360deg);
-    filter: blur(60px) saturate(1.35);
-    opacity: 0.9;
-    animation: aurora-spin 50s linear infinite;
-    will-change: transform;
-  }}
-  @keyframes aurora-spin {{
-    from {{ transform: rotate(0deg) scale(1); }}
-    50%  {{ transform: rotate(180deg) scale(1.1); }}
-    to   {{ transform: rotate(360deg) scale(1); }}
-  }}
-
-  /* --- 液体鎏金 blob 层 --- */
-  .liquid {{
-    position: fixed; inset: 0;
+    inset: 0;
     z-index: -2;
     pointer-events: none;
-    overflow: hidden;
-    filter: blur(50px) saturate(1.4);
-  }}
-  .liquid .blob {{
-    position: absolute;
-    border-radius: 50%;
-    mix-blend-mode: screen;
-    will-change: transform;
-  }}
-  .blob-1 {{
-    width: 520px; height: 520px;
-    top: -120px; left: -100px;
-    background: radial-gradient(circle, #ffb86b 0%, rgba(255,184,107,0) 70%);
-    animation: float1 22s ease-in-out infinite;
-  }}
-  .blob-2 {{
-    width: 460px; height: 460px;
-    top: 28%; right: -140px;
-    background: radial-gradient(circle, #ff7a9e 0%, rgba(255,122,158,0) 70%);
-    animation: float2 26s ease-in-out infinite;
-  }}
-  .blob-3 {{
-    width: 400px; height: 400px;
-    bottom: -60px; left: 18%;
-    background: radial-gradient(circle, #b68aff 0%, rgba(182,138,255,0) 70%);
-    animation: float3 30s ease-in-out infinite;
-  }}
-  .blob-4 {{
-    width: 340px; height: 340px;
-    top: 48%; left: 30%;
-    background: radial-gradient(circle, #ffd93d 0%, rgba(255,217,61,0) 70%);
-    animation: float4 34s ease-in-out infinite;
-    opacity: 0.7;
-  }}
-  @keyframes float1 {{
-    0%,100% {{ transform: translate(0,0) scale(1); }}
-    33%     {{ transform: translate(80px,120px) scale(1.15); }}
-    66%     {{ transform: translate(-40px,60px) scale(0.85); }}
-  }}
-  @keyframes float2 {{
-    0%,100% {{ transform: translate(0,0) scale(1); }}
-    33%     {{ transform: translate(-80px,-60px) scale(1.1); }}
-    66%     {{ transform: translate(40px,80px) scale(0.9); }}
-  }}
-  @keyframes float3 {{
-    0%,100% {{ transform: translate(0,0) scale(1); }}
-    33%     {{ transform: translate(100px,-80px) scale(1.2); }}
-    66%     {{ transform: translate(-60px,40px) scale(0.9); }}
-  }}
-  @keyframes float4 {{
-    0%,100% {{ transform: translate(0,0) scale(1); opacity: 0.7; }}
-    50%     {{ transform: translate(-120px,-60px) scale(1.1); opacity: 0.9; }}
   }}
 
-  /* --- 极细斜向光束（极光感的顶层）--- */
-  .sheen {{
-    position: fixed; inset: -20%;
+  /* ========== 聚光灯遮罩：鼠标出现处"照亮"，其余压暗 ========== */
+  .spotlight {{
+    position: fixed;
+    inset: 0;
     z-index: -1;
     pointer-events: none;
-    background:
-      linear-gradient(115deg,
-        transparent 35%,
-        rgba(255,255,255,0.04) 48%,
-        rgba(255,217,161,0.10) 52%,
-        rgba(255,255,255,0.04) 56%,
-        transparent 68%);
-    animation: sheen-slide 14s ease-in-out infinite;
-    mix-blend-mode: screen;
+    background: radial-gradient(
+      circle 280px at var(--mx, -500px) var(--my, -500px),
+      transparent 0%,
+      rgba(0,0,0,0.15) 40%,
+      rgba(0,0,0,0.55) 100%);
+    transition: opacity 0.4s ease;
   }}
-  @keyframes sheen-slide {{
-    0%,100% {{ transform: translateX(-10%); opacity: 0.6; }}
-    50%     {{ transform: translateX(10%);  opacity: 1;   }}
+  /* 柔金光晕层：鼠标位置附近一层暖色光 */
+  .spotlight::before {{
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+      circle 220px at var(--mx, -500px) var(--my, -500px),
+      rgba(255,184,107,0.10) 0%,
+      rgba(255,184,107,0.04) 40%,
+      transparent 70%);
+    mix-blend-mode: screen;
   }}
 
   /* ========== 顶部滚动进度条 ========== */
@@ -1061,35 +988,26 @@ def render_html(ctx: dict[str, Any]) -> str:
   section {{
     margin-top: 18px;
     position: relative;
-    /* 双层背景：卡片底色 (padding-box) + 鎏金流动边框 (border-box) */
-    background:
-      linear-gradient(var(--card), var(--card)) padding-box,
-      linear-gradient(135deg,
-        rgba(255,184,107,0.55) 0%,
-        rgba(255,122,158,0.35) 25%,
-        rgba(182,138,255,0.45) 50%,
-        rgba(130,177,255,0.30) 75%,
-        rgba(255,184,107,0.55) 100%) border-box;
-    background-size: 100% 100%, 300% 300%;
-    border: 1px solid transparent;
+    background: rgba(12,14,28,0.55);
+    border: 1px solid var(--card-border);
     border-radius: 18px;
     padding: 4px 0;
     overflow: hidden;
-    backdrop-filter: blur(14px) saturate(1.3);
-    -webkit-backdrop-filter: blur(14px) saturate(1.3);
-    box-shadow:
-      0 20px 50px -30px rgba(0,0,0,0.6),
-      0 0 0 1px rgba(255,255,255,0.02) inset,
-      0 40px 80px -60px rgba(255,184,107,0.3);
+    backdrop-filter: blur(14px) saturate(1.2);
+    -webkit-backdrop-filter: blur(14px) saturate(1.2);
+    box-shadow: 0 24px 50px -30px rgba(0,0,0,0.7);
     opacity: 0;
     transform: translateY(18px);
     transition: opacity 0.7s cubic-bezier(.2,.8,.2,1),
-                transform 0.7s cubic-bezier(.2,.8,.2,1);
-    animation: border-flow 18s linear infinite;
+                transform 0.7s cubic-bezier(.2,.8,.2,1),
+                border-color 0.3s ease,
+                box-shadow 0.3s ease;
   }}
-  @keyframes border-flow {{
-    0%   {{ background-position: 0 0, 0% 50%;   }}
-    100% {{ background-position: 0 0, 300% 50%; }}
+  section:hover {{
+    border-color: rgba(255,184,107,0.28);
+    box-shadow:
+      0 24px 60px -30px rgba(0,0,0,0.75),
+      0 0 30px -10px rgba(255,184,107,0.18);
   }}
   section.revealed {{ opacity: 1; transform: translateY(0); }}
   section.collapsed .sec-body {{ display: none; }}
@@ -1446,28 +1364,20 @@ def render_html(ctx: dict[str, Any]) -> str:
       animation-iteration-count: 1 !important;
       transition-duration: 0.01s !important;
     }}
-    .aurora, .liquid, .sheen {{ display: none; }}
+    #starfield, .spotlight {{ display: none; }}
   }}
 
-  /* 小屏性能优化：减少背景模糊量级 */
-  @media (max-width: 480px) {{
-    .aurora {{ filter: blur(40px) saturate(1.2); }}
-    .liquid {{ filter: blur(35px) saturate(1.2); }}
-    .blob-4 {{ display: none; }}
+  /* 移动端：没鼠标，聚光灯直接关掉 */
+  @media (hover: none) and (pointer: coarse) {{
+    .spotlight {{ display: none; }}
   }}
 </style>
 </head>
 <body>
 <div class="scroll-progress" id="scrollProgress"></div>
 
-<div class="aurora" aria-hidden="true"></div>
-<div class="liquid" aria-hidden="true">
-  <div class="blob blob-1"></div>
-  <div class="blob blob-2"></div>
-  <div class="blob blob-3"></div>
-  <div class="blob blob-4"></div>
-</div>
-<div class="sheen" aria-hidden="true"></div>
+<canvas id="starfield" aria-hidden="true"></canvas>
+<div class="spotlight" aria-hidden="true"></div>
 
 <div class="wrap">
   <header>
@@ -1651,12 +1561,158 @@ def render_html(ctx: dict[str, Any]) -> str:
     }});
   }});
 
-  // ---------- 7) 轻量视差：液体层随滚动反向偏移（极光保持自转）----------
-  var liquid = document.querySelector('.liquid');
-  window.addEventListener('scroll', function() {{
-    var y = window.scrollY;
-    if (liquid) liquid.style.transform = 'translate3d(0,' + (y * -0.08) + 'px,0)';
-  }}, {{ passive: true }});
+  // ---------- 7) 星空 Canvas + 鼠标聚光灯 + 光圈内星座连线 ----------
+  var canvas = document.getElementById('starfield');
+  var spotlight = document.querySelector('.spotlight');
+  var isTouch = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
+  var prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  if (canvas && !prefersReduced) {{
+    var ctx2 = canvas.getContext('2d');
+    var DPR = Math.min(window.devicePixelRatio || 1, 2);
+    var W = 0, H = 0;
+    var stars = [];
+    var N = 150;
+    var SPOT_R = 260;         // 聚光灯半径（逻辑像素）
+    var LINK_DIST = 110;      // 连线最大距离
+    var mouse = {{ x: -9999, y: -9999, active: false }};
+
+    function resize() {{
+      W = window.innerWidth;
+      H = window.innerHeight;
+      canvas.width  = W * DPR;
+      canvas.height = H * DPR;
+      canvas.style.width  = W + 'px';
+      canvas.style.height = H + 'px';
+      ctx2.setTransform(DPR, 0, 0, DPR, 0, 0);
+    }}
+    resize();
+    window.addEventListener('resize', resize);
+
+    function seed() {{
+      stars = [];
+      for (var i = 0; i < N; i++) {{
+        stars.push({{
+          x: Math.random() * W,
+          y: Math.random() * H,
+          r: Math.random() * 1.1 + 0.3,
+          tw: Math.random() * Math.PI * 2,    // 闪烁相位
+          sp: Math.random() * 0.02 + 0.008,   // 闪烁速度
+          vx: (Math.random() - 0.5) * 0.18,
+          vy: (Math.random() - 0.5) * 0.18,
+        }});
+      }}
+    }}
+    seed();
+    window.addEventListener('resize', function() {{ seed(); }});
+
+    // 鼠标跟踪（同时更新 spotlight CSS 变量）
+    window.addEventListener('mousemove', function(ev) {{
+      mouse.x = ev.clientX;
+      mouse.y = ev.clientY;
+      mouse.active = true;
+      if (spotlight) {{
+        spotlight.style.setProperty('--mx', ev.clientX + 'px');
+        spotlight.style.setProperty('--my', ev.clientY + 'px');
+      }}
+    }}, {{ passive: true }});
+    window.addEventListener('mouseleave', function() {{
+      mouse.active = false;
+      mouse.x = mouse.y = -9999;
+      if (spotlight) {{
+        spotlight.style.setProperty('--mx', '-500px');
+        spotlight.style.setProperty('--my', '-500px');
+      }}
+    }});
+
+    function tick() {{
+      ctx2.clearRect(0, 0, W, H);
+
+      // --- 1) 更新位置 + 环绕 ---
+      for (var i = 0; i < N; i++) {{
+        var s = stars[i];
+        s.x += s.vx; s.y += s.vy;
+        s.tw += s.sp;
+        if (s.x < -5) s.x = W + 5;
+        if (s.x > W + 5) s.x = -5;
+        if (s.y < -5) s.y = H + 5;
+        if (s.y > H + 5) s.y = -5;
+      }}
+
+      // --- 2) 画连线（仅鼠标聚光灯范围内的星星互相连接）---
+      if (mouse.active) {{
+        ctx2.lineWidth = 0.6;
+        for (var i = 0; i < N; i++) {{
+          var a = stars[i];
+          var dxm = a.x - mouse.x, dym = a.y - mouse.y;
+          if (dxm * dxm + dym * dym > SPOT_R * SPOT_R) continue;
+          for (var j = i + 1; j < N; j++) {{
+            var b = stars[j];
+            var dxm2 = b.x - mouse.x, dym2 = b.y - mouse.y;
+            if (dxm2 * dxm2 + dym2 * dym2 > SPOT_R * SPOT_R) continue;
+            var dx = a.x - b.x, dy = a.y - b.y;
+            var d2 = dx * dx + dy * dy;
+            if (d2 < LINK_DIST * LINK_DIST) {{
+              var d = Math.sqrt(d2);
+              var alpha = (1 - d / LINK_DIST) * 0.5;
+              ctx2.strokeStyle = 'rgba(255,200,140,' + alpha.toFixed(3) + ')';
+              ctx2.beginPath();
+              ctx2.moveTo(a.x, a.y);
+              ctx2.lineTo(b.x, b.y);
+              ctx2.stroke();
+            }}
+          }}
+        }}
+      }}
+
+      // --- 3) 画星点 ---
+      for (var i = 0; i < N; i++) {{
+        var s = stars[i];
+        // 闪烁亮度 0.25~0.9
+        var base = 0.25 + (Math.sin(s.tw) + 1) * 0.5 * 0.5;
+
+        // 聚光灯增亮
+        var boost = 0;
+        if (mouse.active) {{
+          var dxm = s.x - mouse.x, dym = s.y - mouse.y;
+          var d = Math.sqrt(dxm * dxm + dym * dym);
+          if (d < SPOT_R) boost = (1 - d / SPOT_R) * 0.7;
+          else base *= 0.55;  // 聚光灯外的星星压暗
+        }}
+
+        var alpha = Math.min(1, base + boost);
+        var r = s.r * (1 + boost * 0.8);
+
+        // 光晕
+        var grad = ctx2.createRadialGradient(s.x, s.y, 0, s.x, s.y, r * 5);
+        grad.addColorStop(0, 'rgba(255,240,215,' + alpha.toFixed(3) + ')');
+        grad.addColorStop(0.4, 'rgba(180,200,235,' + (alpha * 0.25).toFixed(3) + ')');
+        grad.addColorStop(1, 'rgba(160,180,230,0)');
+        ctx2.fillStyle = grad;
+        ctx2.beginPath();
+        ctx2.arc(s.x, s.y, r * 5, 0, Math.PI * 2);
+        ctx2.fill();
+
+        // 实心小核
+        ctx2.fillStyle = 'rgba(255,250,235,' + alpha.toFixed(3) + ')';
+        ctx2.beginPath();
+        ctx2.arc(s.x, s.y, r, 0, Math.PI * 2);
+        ctx2.fill();
+      }}
+
+      requestAnimationFrame(tick);
+    }}
+    tick();
+  }}
+
+  // ---------- 8) 触屏设备：跟随手指作为"聚光灯" ----------
+  if (isTouch && spotlight) {{
+    window.addEventListener('touchmove', function(ev) {{
+      var t = ev.touches[0]; if (!t) return;
+      spotlight.style.setProperty('--mx', t.clientX + 'px');
+      spotlight.style.setProperty('--my', t.clientY + 'px');
+    }}, {{ passive: true }});
+  }}
 }})();
 </script>
 </body>
