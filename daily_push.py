@@ -20,6 +20,7 @@ import json
 import logging
 import os
 import random
+import re
 import sys
 import urllib.error
 import urllib.parse
@@ -169,6 +170,58 @@ def _classify(title: str) -> str:
     return "💬 其他话题"
 
 
+# ---- 相似话题去重（Jaccard + 中文 2-gram）--------------------------------
+_STOP = set("的了是和与及或在也就都还又把被从向于到为而且但即如果我你他她它们这那个么吧嘛啊吗哦有没又去来上下新新版热门消息曝光官宣回应称上热搜")
+
+
+def _title_tokens(title: str) -> set[str]:
+    """提取标题的指纹词集：中文按 2-gram；英文/数字按整词（≥2）。"""
+    # 去除标点/空白/emoji（保留中英数）
+    clean = re.sub(r"[^\w\u4e00-\u9fff]+", " ", title)
+    toks: set[str] = set()
+    for seg in clean.split():
+        if not seg:
+            continue
+        if any("\u4e00" <= c <= "\u9fff" for c in seg):
+            # 中文 2-gram
+            for i in range(len(seg) - 1):
+                g = seg[i:i + 2]
+                if g not in _STOP:
+                    toks.add(g)
+        else:
+            w = seg.lower()
+            if len(w) >= 2 and w not in _STOP:
+                toks.add(w)
+    return toks
+
+
+def _jaccard(a: set[str], b: set[str]) -> float:
+    if not a or not b:
+        return 0.0
+    inter = len(a & b)
+    if inter == 0:
+        return 0.0
+    return inter / len(a | b)
+
+
+def _dedupe_similar(
+    items: list[dict[str, str]],
+    threshold: float = 0.5,
+) -> list[dict[str, str]]:
+    """同分类内用 Jaccard 相似度去重，先出现的（热度更高）优先保留。"""
+    kept: list[dict[str, str]] = []
+    kept_tokens: list[set[str]] = []
+    for it in items:
+        tokens = _title_tokens(it["title"])
+        if not tokens:
+            continue
+        if any(_jaccard(tokens, kt) >= threshold for kt in kept_tokens):
+            continue
+        kept.append(it)
+        kept_tokens.append(tokens)
+    return kept
+
+
 def collect_hot_by_category() -> dict[str, list[dict[str, str]]]:
     """抓取微博/抖音/小红书/B 站热搜各前 20，去重后按分类组织。"""
     sources = [
@@ -201,11 +254,14 @@ def collect_hot_by_category() -> dict[str, list[dict[str, str]]]:
                 "link": item.get("link") or "",
             })
 
-    # 每个分类限制最多 6 条，避免展示过长；去掉空分类
+    # 相似话题去重（Jaccard 0.5，同分类内）+ 每类限 6 条
     out: dict[str, list[dict[str, str]]] = {}
     for cat, items in buckets.items():
-        if items:
-            out[cat] = items[:6]
+        if not items:
+            continue
+        deduped = _dedupe_similar(items, threshold=0.5)
+        if deduped:
+            out[cat] = deduped[:6]
     return out
 
 
@@ -615,15 +671,25 @@ def e(text: str) -> str:
 
 
 def _link_or_span(href: str, inner_html: str, extra_class: str = "") -> str:
-    """有 link 就包 <a>（可点击），否则包 <div>（静态）。"""
-    cls = f"row {extra_class}".strip()
+    """
+    有 link 就包 <a>（可点击），否则包 <div>（静态）。
+    extra_class 支持写入额外 HTML 属性（比如 `meme data-hidden="1"`）。
+    """
+    cls_and_attrs = extra_class.strip()
+    # 兼容原逻辑：把 data-* 之前的都当作 class，之后都当属性
+    if " data-" in " " + cls_and_attrs:
+        cls_part, _, attr_part = cls_and_attrs.partition(" data-")
+        attr_part = " data-" + attr_part
+    else:
+        cls_part, attr_part = cls_and_attrs, ""
+    cls = f"row {cls_part}".strip()
     if href:
         return (
-            f'<a class="{cls}" href="{e(href)}" target="_blank" rel="noopener">'
+            f'<a class="{cls}"{attr_part} href="{e(href)}" target="_blank" rel="noopener">'
             f'{inner_html}<span class="chev" aria-hidden="true">›</span>'
             "</a>"
         )
-    return f'<div class="{cls} static">{inner_html}</div>'
+    return f'<div class="{cls} static"{attr_part}>{inner_html}</div>'
 
 
 def render_html(ctx: dict[str, Any]) -> str:
@@ -631,23 +697,37 @@ def render_html(ctx: dict[str, Any]) -> str:
     weekday = "一二三四五六日"[date.weekday()]
     date_str = f"{date:%Y 年 %m 月 %d 日} · 星期{weekday}"
 
-    # ---- 分类热搜 ----
+    # ---- 分类热搜（每类默认折叠 4 条）----
     hot_blocks = []
-    for cat, items in (ctx["hot"] or {}).items():
+    for cat_idx, (cat, items) in enumerate((ctx["hot"] or {}).items()):
         rows = []
         for i, m in enumerate(items, 1):
+            # top3 排名加 top 类标识
+            rank_cls = "rank top" if i <= 3 else "rank"
+            hidden = ' data-hidden="1"' if i > 4 else ""
             inner = (
-                f'<span class="rank">{i:02d}</span>'
+                f'<span class="{rank_cls}">{i:02d}</span>'
                 '<div class="main">'
                 f'<div class="title">{e(m["title"])}</div>'
                 f'<div class="sub">{e(m["source"])}</div>'
                 '</div>'
             )
-            rows.append(_link_or_span(m.get("link", ""), inner, "meme"))
+            rows.append(_link_or_span(m.get("link", ""), inner, f"meme{hidden}"))
+        extra = len(items) - 4
+        expand_btn = (
+            f'<button class="expand-btn" data-expanded="0">'
+            f'<span class="expand-label">展开剩余 {extra} 条</span>'
+            f'<span class="expand-chev">▾</span></button>'
+        ) if extra > 0 else ""
         hot_blocks.append(
-            f'<div class="cat-group">'
-            f'  <div class="cat-title">{e(cat)}<span class="cat-count">{len(items)}</span></div>'
-            f'  {"".join(rows)}'
+            f'<div class="cat-group" data-cat-idx="{cat_idx}">'
+            f'  <div class="cat-title">'
+            f'    <span class="cat-bar"></span>'
+            f'    <span class="cat-name">{e(cat)}</span>'
+            f'    <span class="cat-count">{len(items)}</span>'
+            f'  </div>'
+            f'  <div class="cat-items">{"".join(rows)}</div>'
+            f'  {expand_btn}'
             f'</div>'
         )
     hot_section = "".join(hot_blocks) if hot_blocks else "<div class=\"row static\"><div class=\"main\"><div class=\"title\">今日热搜暂未抓取到</div></div></div>"
@@ -719,6 +799,22 @@ def render_html(ctx: dict[str, Any]) -> str:
 
     generated = f"{datetime.now():%Y-%m-%d %H:%M}"
 
+    # 目录锚点项
+    toc_items = [
+        ("hot",      "🔥", "热搜"),
+        ("jokes",    "😄", "冷笑话"),
+        ("media",    "🎬", "影音"),
+        ("concerts", "🎤", "演唱会"),
+        ("travels",  "🧳", "旅游"),
+        ("news",     "📰", "60 秒"),
+    ]
+    toc_html = "".join(
+        f'<a class="toc-item" href="#{sid}" data-target="{sid}">'
+        f'<span class="toc-emoji">{emoji}</span>'
+        f'<span class="toc-label">{label}</span></a>'
+        for sid, emoji, label in toc_items
+    )
+
     return f"""<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -728,40 +824,103 @@ def render_html(ctx: dict[str, Any]) -> str:
 <title>每日热梗·{e(date.strftime('%Y-%m-%d'))}</title>
 <style>
   :root {{
-    --bg: #0d1424;
+    --bg: #0b1020;
+    --bg-2: #0f1630;
     --bg-soft: #151d33;
     --card: rgba(255,255,255,0.035);
-    --card-border: rgba(255,255,255,0.07);
+    --card-border: rgba(255,255,255,0.08);
     --card-hover: rgba(255,255,255,0.06);
     --fg: #eef1f8;
     --fg-2: #b4bdd1;
     --fg-3: #7d879f;
     --accent: #ffb86b;
+    --accent-2: #ffd93d;
     --accent-soft: rgba(255,184,107,0.14);
     --hot: #ff7a7a;
     --mint: #6ddaa8;
     --sky: #82b1ff;
+    --pink: #ff8fb1;
+    --purple: #b68aff;
     --divider: rgba(255,255,255,0.06);
   }}
   * {{ box-sizing: border-box; }}
   html, body {{ margin: 0; padding: 0; }}
+  html {{ scroll-behavior: smooth; scroll-padding-top: 70px; }}
   body {{
     font: 15px/1.65 -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft Yahei", sans-serif;
     color: var(--fg);
     background: var(--bg);
-    background-image:
-      radial-gradient(800px 400px at -10% -10%, rgba(130, 177, 255, 0.08), transparent 60%),
-      radial-gradient(600px 300px at 110% 0%, rgba(255, 184, 107, 0.06), transparent 60%);
     min-height: 100vh;
-    padding: 20px 16px calc(60px + env(safe-area-inset-bottom));
+    padding: 20px 16px calc(80px + env(safe-area-inset-bottom));
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+    overflow-x: hidden;
+    position: relative;
   }}
-  .wrap {{ max-width: 640px; margin: 0 auto; }}
+
+  /* ========== 背景：两团呼吸渐变 + 粒子层 ========== */
+  .bg-gradient {{
+    position: fixed; inset: 0;
+    z-index: -2;
+    pointer-events: none;
+    overflow: hidden;
+  }}
+  .bg-gradient::before,
+  .bg-gradient::after {{
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    will-change: transform, opacity;
+  }}
+  .bg-gradient::before {{
+    width: 520px; height: 520px;
+    top: -80px; left: -120px;
+    background: radial-gradient(circle, rgba(130,177,255,0.28), transparent 60%);
+    animation: breathe1 18s ease-in-out infinite;
+  }}
+  .bg-gradient::after {{
+    width: 480px; height: 480px;
+    top: 40%; right: -120px;
+    background: radial-gradient(circle, rgba(255,184,107,0.22), transparent 60%);
+    animation: breathe2 22s ease-in-out infinite;
+  }}
+  @keyframes breathe1 {{
+    0%, 100% {{ transform: translate(0,0) scale(1); opacity: 0.55; }}
+    50%      {{ transform: translate(30px,30px) scale(1.12); opacity: 0.85; }}
+  }}
+  @keyframes breathe2 {{
+    0%, 100% {{ transform: translate(0,0) scale(1); opacity: 0.5; }}
+    50%      {{ transform: translate(-40px,-20px) scale(1.08); opacity: 0.75; }}
+  }}
+  #particles {{
+    position: fixed; inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0.6;
+  }}
+
+  /* ========== 顶部滚动进度条 ========== */
+  .scroll-progress {{
+    position: fixed;
+    top: 0; left: 0;
+    height: 2px;
+    width: 0;
+    background: linear-gradient(90deg, var(--hot), var(--accent), var(--accent-2));
+    z-index: 100;
+    transition: width 0.1s linear;
+    box-shadow: 0 0 8px rgba(255,184,107,0.6);
+  }}
+
+  .wrap {{ max-width: 640px; margin: 0 auto; position: relative; }}
   a {{ color: inherit; text-decoration: none; -webkit-tap-highlight-color: transparent; }}
 
   /* ========== Header ========== */
-  header {{ padding: 4px 4px 16px; }}
+  header {{
+    padding: 4px 4px 16px;
+    opacity: 0;
+    animation: fadeInUp 0.7s cubic-bezier(.2,.8,.2,1) 0.05s forwards;
+  }}
   .brand {{
     display: inline-flex; align-items: center; gap: 6px;
     font-size: 11px; letter-spacing: 3px;
@@ -769,57 +928,178 @@ def render_html(ctx: dict[str, Any]) -> str:
     padding: 4px 10px;
     border: 1px solid var(--card-border);
     border-radius: 20px;
+    backdrop-filter: blur(10px);
   }}
   h1 {{
     margin: 14px 0 4px;
-    font-size: 26px; font-weight: 800; letter-spacing: -0.5px;
-    color: var(--fg);
+    font-size: 28px; font-weight: 800; letter-spacing: -0.5px;
+    background: linear-gradient(135deg, #fff 0%, #ffd9a8 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
   }}
   .date {{
     color: var(--fg-3); font-size: 13px;
     font-family: "SF Mono", "Menlo", monospace;
   }}
+
+  /* ========== 顶部目录锚点条 ========== */
+  .toc {{
+    position: sticky;
+    top: 8px;
+    z-index: 50;
+    margin: 18px -4px 22px;
+    padding: 8px;
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    background: rgba(11,16,32,0.7);
+    backdrop-filter: saturate(180%) blur(18px);
+    -webkit-backdrop-filter: saturate(180%) blur(18px);
+    border: 1px solid var(--card-border);
+    border-radius: 14px;
+    box-shadow: 0 8px 28px -12px rgba(0,0,0,0.5);
+    opacity: 0;
+    animation: fadeInUp 0.7s cubic-bezier(.2,.8,.2,1) 0.15s forwards;
+  }}
+  .toc::-webkit-scrollbar {{ display: none; }}
+  .toc-item {{
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 7px 12px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--fg-2);
+    border-radius: 10px;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    position: relative;
+  }}
+  .toc-item:hover {{
+    color: var(--fg);
+    background: rgba(255,255,255,0.05);
+    transform: translateY(-1px);
+  }}
+  .toc-item.active {{
+    color: var(--accent);
+    background: var(--accent-soft);
+    box-shadow: 0 2px 10px -2px rgba(255,184,107,0.35);
+  }}
+  .toc-emoji {{ font-size: 14px; filter: saturate(1.1); }}
+
   /* ========== Section ========== */
   section {{
-    margin-top: 22px;
+    margin-top: 18px;
     background: var(--card);
     border: 1px solid var(--card-border);
-    border-radius: 16px;
+    border-radius: 18px;
     padding: 4px 0;
     overflow: hidden;
+    backdrop-filter: blur(6px);
+    opacity: 0;
+    transform: translateY(18px);
+    transition: opacity 0.7s cubic-bezier(.2,.8,.2,1),
+                transform 0.7s cubic-bezier(.2,.8,.2,1);
   }}
+  section.revealed {{ opacity: 1; transform: translateY(0); }}
+  section.collapsed .sec-body {{ display: none; }}
+  section.collapsed .sec-toggle {{ transform: rotate(-90deg); }}
+
   .sec-head {{
     display: flex; align-items: center;
-    padding: 14px 18px 6px;
+    padding: 16px 18px 10px;
     gap: 10px;
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+  }}
+  .sec-emoji {{
+    font-size: 18px;
+    display: inline-block;
+    transition: transform 0.3s cubic-bezier(.5,-0.5,.3,1.5);
+  }}
+  section.revealed .sec-emoji {{
+    animation: pop 0.6s cubic-bezier(.34,1.56,.64,1);
+  }}
+  @keyframes pop {{
+    0%   {{ transform: scale(0.6) rotate(-10deg); }}
+    60%  {{ transform: scale(1.25) rotate(6deg); }}
+    100% {{ transform: scale(1) rotate(0); }}
   }}
   .sec-head h2 {{
     margin: 0;
-    font-size: 13px; font-weight: 700;
-    letter-spacing: 2px;
-    color: var(--fg-2);
-    text-transform: uppercase;
+    font-size: 14px; font-weight: 700;
+    letter-spacing: 1.5px;
+    color: var(--fg);
   }}
   .sec-head .count {{
     margin-left: auto;
     color: var(--fg-3); font-size: 12px;
     font-family: "SF Mono", "Menlo", monospace;
   }}
+  .sec-toggle {{
+    margin-left: 10px;
+    width: 24px; height: 24px;
+    display: grid; place-items: center;
+    border-radius: 50%;
+    color: var(--fg-3);
+    transition: transform 0.3s cubic-bezier(.2,.8,.2,1), background 0.2s ease;
+    font-size: 14px;
+  }}
+  .sec-head:hover .sec-toggle {{ background: rgba(255,255,255,0.08); color: var(--accent); }}
 
-  /* ========== Row (可点击条目通用样式) ========== */
+  /* ========== Row ========== */
   .row {{
     display: flex; align-items: center; gap: 12px;
     padding: 14px 18px;
     border-top: 1px solid var(--divider);
-    transition: background 0.18s ease;
+    transition: background 0.2s ease, transform 0.25s ease, box-shadow 0.25s ease;
     position: relative;
+    overflow: hidden;
   }}
-  .row:first-of-type {{ border-top: 1px solid var(--divider); }}
-  .sec-head + .row {{ border-top: 1px solid var(--divider); }}
-  a.row:hover,
-  a.row:active {{ background: var(--card-hover); }}
+  .row[data-hidden="1"] {{ display: none; }}
+  .row.show-all[data-hidden="1"] {{ display: flex; animation: fadeInUp 0.4s ease both; }}
+  a.row {{ cursor: pointer; }}
+  a.row:hover {{
+    background: var(--card-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 24px -14px rgba(0,0,0,0.5),
+                0 0 0 1px rgba(255,255,255,0.04) inset;
+  }}
+  a.row:active {{ transform: translateY(0); transition: transform 0.08s; }}
+  /* 高光扫过 */
+  a.row::before {{
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(120deg,
+      transparent 30%,
+      rgba(255,255,255,0.08) 50%,
+      transparent 70%);
+    transform: translateX(-120%);
+    transition: transform 0.7s ease;
+    pointer-events: none;
+  }}
+  a.row:hover::before {{ transform: translateX(120%); }}
+  /* 点击涟漪 */
+  .ripple {{
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255,184,107,0.35);
+    transform: translate(-50%, -50%) scale(0);
+    animation: ripple 0.6s ease-out;
+    pointer-events: none;
+    z-index: 1;
+  }}
+  @keyframes ripple {{
+    to {{ transform: translate(-50%, -50%) scale(4); opacity: 0; }}
+  }}
   .row.static {{ cursor: default; }}
-  .row .main {{ flex: 1; min-width: 0; }}
+  .row .main {{ flex: 1; min-width: 0; position: relative; z-index: 2; }}
   .row .title {{
     font-weight: 600; font-size: 15px; color: var(--fg);
     line-height: 1.5; word-break: break-word;
@@ -834,19 +1114,28 @@ def render_html(ctx: dict[str, Any]) -> str:
     color: var(--fg-3);
     font-size: 22px; line-height: 1;
     font-family: "SF Mono", "Menlo", monospace;
-    opacity: 0.6;
-    transition: transform 0.18s ease, opacity 0.18s ease;
+    opacity: 0.4;
+    transition: transform 0.25s ease, opacity 0.25s ease, color 0.25s ease;
+    position: relative; z-index: 2;
   }}
-  a.row:hover .chev {{ opacity: 1; transform: translateX(2px); color: var(--accent); }}
+  a.row:hover .chev {{ opacity: 1; transform: translateX(3px); color: var(--accent); }}
 
-  /* ========== 热梗 ========== */
+  /* ========== 热梗：排名金属质感 ========== */
   .meme .rank {{
     flex: 0 0 28px;
     font-family: "SF Mono", "Menlo", monospace;
-    font-weight: 700;
-    font-size: 14px;
-    color: var(--hot);
+    font-weight: 800;
+    font-size: 15px;
+    color: var(--fg-3);
     letter-spacing: 0;
+    text-align: left;
+  }}
+  .meme .rank.top {{
+    background: linear-gradient(135deg, #ff5a5a 0%, #ffb86b 50%, #ffd93d 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 1px 3px rgba(255,122,122,0.35));
   }}
 
   /* ========== 冷笑话 ========== */
@@ -857,27 +1146,34 @@ def render_html(ctx: dict[str, Any]) -> str:
     font-size: 14.5px;
     line-height: 1.75;
     position: relative;
+    transition: background 0.2s ease;
   }}
+  .joke:hover {{ background: rgba(255,255,255,0.02); }}
   .joke::before {{
     content: '"';
     display: inline-block;
-    color: var(--accent);
-    font-size: 28px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-size: 30px;
     line-height: 0.8;
     margin-right: 6px;
     font-weight: 700;
     vertical-align: -8px;
   }}
 
-  /* ========== 电影 ========== */
+  /* ========== 影音 ========== */
   .movie .poster {{
     flex: 0 0 64px;
     width: 64px; height: 88px;
     object-fit: cover;
-    border-radius: 8px;
+    border-radius: 10px;
     background: var(--bg-soft);
-    box-shadow: 0 4px 12px -4px rgba(0,0,0,0.5);
+    box-shadow: 0 6px 16px -6px rgba(0,0,0,0.6);
+    transition: transform 0.3s ease;
   }}
+  a.row.movie:hover .poster {{ transform: scale(1.05) rotate(-1deg); }}
   .movie .poster-empty {{
     display: grid; place-items: center;
     color: var(--fg-3); font-size: 24px;
@@ -904,9 +1200,12 @@ def render_html(ctx: dict[str, Any]) -> str:
     margin-left: 4px;
     margin-top: 10px;
     align-self: flex-start;
+    transition: box-shadow 0.25s ease, transform 0.25s ease;
   }}
   .concert-dot {{ background: var(--sky); box-shadow: 0 0 10px rgba(130,177,255,0.5); }}
   .travel-dot  {{ background: var(--mint); box-shadow: 0 0 10px rgba(109,218,168,0.5); }}
+  a.row:hover .concert-dot {{ box-shadow: 0 0 16px rgba(130,177,255,0.9); transform: scale(1.3); }}
+  a.row:hover .travel-dot {{ box-shadow: 0 0 16px rgba(109,218,168,0.9); transform: scale(1.3); }}
   .chip {{
     display: inline-block;
     margin-left: 8px;
@@ -924,6 +1223,7 @@ def render_html(ctx: dict[str, Any]) -> str:
   /* ========== 分类热搜分组 ========== */
   .cat-group {{
     border-top: 1px solid var(--divider);
+    position: relative;
   }}
   .cat-group:first-of-type {{ border-top: 1px solid var(--divider); }}
   .cat-title {{
@@ -934,8 +1234,26 @@ def render_html(ctx: dict[str, Any]) -> str:
     letter-spacing: 1px;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
+    position: relative;
   }}
+  /* 分类左侧色条 */
+  .cat-bar {{
+    width: 3px;
+    height: 14px;
+    border-radius: 2px;
+    background: var(--accent);
+    transition: height 0.25s cubic-bezier(.2,.8,.2,1);
+  }}
+  .cat-group[data-cat-idx="0"] .cat-bar {{ background: var(--sky); }}
+  .cat-group[data-cat-idx="1"] .cat-bar {{ background: var(--pink); }}
+  .cat-group[data-cat-idx="2"] .cat-bar {{ background: var(--mint); }}
+  .cat-group[data-cat-idx="3"] .cat-bar {{ background: var(--purple); }}
+  .cat-group[data-cat-idx="4"] .cat-bar {{ background: var(--accent); }}
+  .cat-group[data-cat-idx="5"] .cat-bar {{ background: var(--hot); }}
+  .cat-group[data-cat-idx="6"] .cat-bar {{ background: var(--accent-2); }}
+  .cat-group[data-cat-idx="7"] .cat-bar {{ background: var(--mint); }}
+  .cat-group:hover .cat-bar {{ height: 20px; }}
   .cat-count {{
     font-family: "SF Mono", "Menlo", monospace;
     font-size: 11px;
@@ -944,7 +1262,35 @@ def render_html(ctx: dict[str, Any]) -> str:
     padding: 1px 8px;
     border-radius: 999px;
     font-weight: 500;
+    margin-left: auto;
   }}
+  .expand-btn {{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    margin: 4px 16px 12px;
+    padding: 8px 14px;
+    width: calc(100% - 32px);
+    background: transparent;
+    border: 1px dashed var(--card-border);
+    border-radius: 10px;
+    color: var(--fg-3);
+    font-size: 12.5px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }}
+  .expand-btn:hover {{
+    color: var(--accent);
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }}
+  .expand-chev {{
+    display: inline-block;
+    transition: transform 0.3s cubic-bezier(.2,.8,.2,1);
+    font-size: 11px;
+  }}
+  .expand-btn[data-expanded="1"] .expand-chev {{ transform: rotate(180deg); }}
 
   /* ========== 60 秒 ========== */
   .news-row .news-title {{
@@ -960,7 +1306,33 @@ def render_html(ctx: dict[str, Any]) -> str:
     border-radius: 50%;
     align-self: flex-start;
     margin-top: 10px;
+    transition: background 0.2s ease, box-shadow 0.2s ease;
   }}
+  a.row:hover .news-bullet {{ background: var(--accent); box-shadow: 0 0 10px var(--accent); }}
+
+  /* ========== 回到顶部按钮 ========== */
+  .back-top {{
+    position: fixed;
+    right: 18px;
+    bottom: calc(24px + env(safe-area-inset-bottom));
+    width: 44px; height: 44px;
+    border: 1px solid var(--card-border);
+    border-radius: 50%;
+    background: rgba(11,16,32,0.8);
+    backdrop-filter: blur(12px);
+    color: var(--accent);
+    font-size: 20px;
+    cursor: pointer;
+    display: grid; place-items: center;
+    opacity: 0;
+    transform: translateY(20px) scale(0.8);
+    transition: all 0.3s cubic-bezier(.2,.8,.2,1);
+    pointer-events: none;
+    z-index: 60;
+    box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
+  }}
+  .back-top.show {{ opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }}
+  .back-top:hover {{ background: var(--accent); color: #0b1020; transform: translateY(-4px) scale(1.05); }}
 
   /* ========== Footer ========== */
   footer {{
@@ -972,10 +1344,31 @@ def render_html(ctx: dict[str, Any]) -> str:
     font-family: "SF Mono", "Menlo", monospace;
   }}
   footer .sources {{ color: var(--fg-3); }}
-  footer a {{ color: var(--accent); }}
+  footer a {{ color: var(--accent); transition: color 0.2s; }}
+  footer a:hover {{ color: var(--accent-2); }}
+
+  /* ========== 动画关键帧 ========== */
+  @keyframes fadeInUp {{
+    from {{ opacity: 0; transform: translateY(16px); }}
+    to   {{ opacity: 1; transform: translateY(0); }}
+  }}
+
+  /* 用户偏好：减少动画 */
+  @media (prefers-reduced-motion: reduce) {{
+    *, *::before, *::after {{
+      animation-duration: 0.01s !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01s !important;
+    }}
+    #particles, .bg-gradient {{ display: none; }}
+  }}
 </style>
 </head>
 <body>
+<div class="scroll-progress" id="scrollProgress"></div>
+<div class="bg-gradient" aria-hidden="true"></div>
+<canvas id="particles" aria-hidden="true"></canvas>
+
 <div class="wrap">
   <header>
     <div class="brand">Daily Digest</div>
@@ -983,52 +1376,78 @@ def render_html(ctx: dict[str, Any]) -> str:
     <div class="date">{e(date_str)}</div>
   </header>
 
-  <section>
+  <nav class="toc" aria-label="目录">{toc_html}</nav>
+
+  <section id="hot" data-sec>
     <div class="sec-head">
-      <h2>🔥 今日热搜</h2>
-      <div class="count">微博 · 抖音 · 小红书 · B 站 · 点击看原帖</div>
+      <span class="sec-emoji">🔥</span>
+      <h2>今日热搜</h2>
+      <div class="count">微博 · 抖音 · 小红书 · B 站</div>
+      <span class="sec-toggle" aria-hidden="true">▾</span>
     </div>
-    {hot_section}
+    <div class="sec-body">
+      {hot_section}
+    </div>
   </section>
 
-  <section>
+  <section id="jokes" data-sec>
     <div class="sec-head">
-      <h2>😄 冷笑话</h2>
+      <span class="sec-emoji">😄</span>
+      <h2>冷笑话</h2>
       <div class="count">{len(ctx["jokes"])} 条</div>
+      <span class="sec-toggle" aria-hidden="true">▾</span>
     </div>
-    {joke_items}
+    <div class="sec-body">
+      {joke_items}
+    </div>
   </section>
 
-  <section>
+  <section id="media" data-sec>
     <div class="sec-head">
-      <h2>🎬 影音榜单</h2>
-      <div class="count">电影 · 剧集 · 流行音乐 · 点击看详情</div>
+      <span class="sec-emoji">🎬</span>
+      <h2>影音榜单</h2>
+      <div class="count">电影 · 剧集 · 流行音乐</div>
+      <span class="sec-toggle" aria-hidden="true">▾</span>
     </div>
-    {media_items}
+    <div class="sec-body">
+      {media_items}
+    </div>
   </section>
 
-  <section>
+  <section id="concerts" data-sec>
     <div class="sec-head">
-      <h2>🎤 演唱会关注</h2>
-      <div class="count">{len(ctx["concerts"])} 位 · 点击查大麦网最新场次</div>
+      <span class="sec-emoji">🎤</span>
+      <h2>演唱会关注</h2>
+      <div class="count">{len(ctx["concerts"])} 位 · 大麦网最新场次</div>
+      <span class="sec-toggle" aria-hidden="true">▾</span>
     </div>
-    {concert_items}
+    <div class="sec-body">
+      {concert_items}
+    </div>
   </section>
 
-  <section>
+  <section id="travels" data-sec>
     <div class="sec-head">
-      <h2>🧳 旅游推荐</h2>
-      <div class="count">{len(ctx["travels"])} 处 · 深圳出发视角 · 点击看攻略</div>
+      <span class="sec-emoji">🧳</span>
+      <h2>旅游推荐</h2>
+      <div class="count">{len(ctx["travels"])} 处 · 深圳出发视角</div>
+      <span class="sec-toggle" aria-hidden="true">▾</span>
     </div>
-    {travel_items}
+    <div class="sec-body">
+      {travel_items}
+    </div>
   </section>
 
-  <section>
+  <section id="news" data-sec>
     <div class="sec-head">
-      <h2>📰 60 秒读懂世界</h2>
+      <span class="sec-emoji">📰</span>
+      <h2>60 秒读懂世界</h2>
       <div class="count">{len(ctx["news"] or [])} 条 · 点击搜索详情</div>
+      <span class="sec-toggle" aria-hidden="true">▾</span>
     </div>
-    {news_items}
+    <div class="sec-body">
+      {news_items}
+    </div>
   </section>
 
   <footer>
@@ -1036,6 +1455,159 @@ def render_html(ctx: dict[str, Any]) -> str:
     <div>生成于 {e(generated)} · <a href="./archive.html">📚 往期归档</a></div>
   </footer>
 </div>
+
+<button class="back-top" id="backTop" aria-label="回到顶部">↑</button>
+
+<script>
+(function() {{
+  // ---------- 1) 滚动进度条 ----------
+  var progress = document.getElementById('scrollProgress');
+  var backTop = document.getElementById('backTop');
+  function updateScroll() {{
+    var h = document.documentElement;
+    var scrolled = h.scrollTop;
+    var max = h.scrollHeight - h.clientHeight;
+    var pct = max > 0 ? (scrolled / max * 100) : 0;
+    progress.style.width = pct + '%';
+    if (scrolled > 600) backTop.classList.add('show');
+    else backTop.classList.remove('show');
+  }}
+  window.addEventListener('scroll', updateScroll, {{ passive: true }});
+  updateScroll();
+
+  // ---------- 2) 回到顶部 ----------
+  backTop.addEventListener('click', function() {{
+    window.scrollTo({{ top: 0, behavior: 'smooth' }});
+  }});
+
+  // ---------- 3) Section 入场动画 + TOC 高亮联动 ----------
+  var sections = document.querySelectorAll('section[data-sec]');
+  var tocItems = document.querySelectorAll('.toc-item');
+  var io = new IntersectionObserver(function(entries) {{
+    entries.forEach(function(entry) {{
+      if (entry.isIntersecting) {{
+        entry.target.classList.add('revealed');
+      }}
+    }});
+  }}, {{ threshold: 0.08 }});
+  sections.forEach(function(s) {{ io.observe(s); }});
+
+  // 滚动联动 toc 高亮
+  function updateToc() {{
+    var pos = window.scrollY + 140;
+    var active = null;
+    sections.forEach(function(s) {{
+      if (s.offsetTop <= pos) active = s.id;
+    }});
+    tocItems.forEach(function(t) {{
+      t.classList.toggle('active', t.dataset.target === active);
+    }});
+  }}
+  window.addEventListener('scroll', updateToc, {{ passive: true }});
+  updateToc();
+
+  // ---------- 4) Section 折叠 ----------
+  document.querySelectorAll('.sec-head').forEach(function(head) {{
+    head.addEventListener('click', function(ev) {{
+      if (ev.target.closest('a, button')) return;
+      head.parentElement.classList.toggle('collapsed');
+    }});
+  }});
+
+  // ---------- 5) 热搜「展开全部」 ----------
+  document.querySelectorAll('.expand-btn').forEach(function(btn) {{
+    btn.addEventListener('click', function(ev) {{
+      ev.stopPropagation();
+      var group = btn.closest('.cat-group');
+      var expanded = btn.dataset.expanded === '1';
+      group.querySelectorAll('.row[data-hidden="1"]').forEach(function(r) {{
+        r.classList.toggle('show-all', !expanded);
+      }});
+      btn.dataset.expanded = expanded ? '0' : '1';
+      var label = btn.querySelector('.expand-label');
+      if (label) {{
+        label.textContent = expanded
+          ? label.textContent.replace('收起', '展开剩余').replace(/^收起$/, '展开')
+          : label.textContent.replace('展开剩余', '收起').replace(/^展开$/, '收起');
+        // 更稳妥：直接替换
+        var hiddenCount = group.querySelectorAll('.row[data-hidden="1"]').length;
+        label.textContent = expanded ? ('展开剩余 ' + hiddenCount + ' 条') : '收起';
+      }}
+    }});
+  }});
+
+  // ---------- 6) 点击涟漪 ----------
+  document.querySelectorAll('a.row').forEach(function(row) {{
+    row.addEventListener('click', function(ev) {{
+      var rect = row.getBoundingClientRect();
+      var ripple = document.createElement('span');
+      ripple.className = 'ripple';
+      var size = Math.max(rect.width, rect.height) * 0.5;
+      ripple.style.width = ripple.style.height = size + 'px';
+      ripple.style.left = (ev.clientX - rect.left) + 'px';
+      ripple.style.top = (ev.clientY - rect.top) + 'px';
+      row.appendChild(ripple);
+      setTimeout(function() {{ ripple.remove(); }}, 700);
+    }});
+  }});
+
+  // ---------- 7) 背景粒子（Canvas 轻量）----------
+  var canvas = document.getElementById('particles');
+  var ctx2 = canvas.getContext('2d');
+  var DPR = Math.min(window.devicePixelRatio || 1, 2);
+  var particles = [];
+  var PN = 24;
+
+  function resize() {{
+    canvas.width = window.innerWidth * DPR;
+    canvas.height = window.innerHeight * DPR;
+    canvas.style.width = window.innerWidth + 'px';
+    canvas.style.height = window.innerHeight + 'px';
+  }}
+  resize();
+  window.addEventListener('resize', resize);
+
+  for (var i = 0; i < PN; i++) {{
+    particles.push({{
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      r: (Math.random() * 1.6 + 0.4) * DPR,
+      vx: (Math.random() - 0.5) * 0.25 * DPR,
+      vy: (Math.random() - 0.5) * 0.25 * DPR,
+      hue: [200, 30, 340, 160][Math.floor(Math.random() * 4)],
+      alpha: Math.random() * 0.4 + 0.2,
+    }});
+  }}
+
+  var raf;
+  function loop() {{
+    ctx2.clearRect(0, 0, canvas.width, canvas.height);
+    particles.forEach(function(p) {{
+      p.x += p.vx; p.y += p.vy;
+      if (p.x < 0) p.x = canvas.width;
+      if (p.x > canvas.width) p.x = 0;
+      if (p.y < 0) p.y = canvas.height;
+      if (p.y > canvas.height) p.y = 0;
+      ctx2.beginPath();
+      ctx2.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx2.fillStyle = 'hsla(' + p.hue + ',70%,70%,' + p.alpha + ')';
+      ctx2.shadowBlur = 8;
+      ctx2.shadowColor = 'hsla(' + p.hue + ',70%,70%,0.6)';
+      ctx2.fill();
+    }});
+    raf = requestAnimationFrame(loop);
+  }}
+  if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {{
+    loop();
+  }}
+
+  // ---------- 8) 轻量视差：背景层随滚动偏移 ----------
+  var bg = document.querySelector('.bg-gradient');
+  window.addEventListener('scroll', function() {{
+    if (bg) bg.style.transform = 'translateY(' + (window.scrollY * -0.08) + 'px)';
+  }}, {{ passive: true }});
+}})();
+</script>
 </body>
 </html>
 """
@@ -1056,9 +1628,8 @@ def write_html_files(html: str, date: datetime) -> Path:
 
 def write_archive_index() -> None:
     """扫描 docs/ 下所有 YYYY-MM-DD.html，生成归档列表页 archive.html。"""
-    import re as _re
     entries: list[str] = []
-    pattern = _re.compile(r"^(\d{4}-\d{2}-\d{2})\.html$")
+    pattern = re.compile(r"^(\d{4}-\d{2}-\d{2})\.html$")
     dates: list[str] = []
     for p in sorted(DOCS_DIR.glob("*.html"), reverse=True):
         m = pattern.match(p.name)
