@@ -670,34 +670,77 @@ def write_html_files(html: str, date: datetime) -> Path:
 # 企微推送
 # ---------------------------------------------------------------------------
 
-def send_news_card(ctx: dict[str, Any], page_url: str) -> bool:
-    """发送图文卡片（点击跳转到 HTML 详情页）。"""
+def _truncate(text: str, n: int) -> str:
+    text = (text or "").strip()
+    return text if len(text) <= n else text[: n - 1] + "…"
+
+
+def send_template_card(ctx: dict[str, Any], page_url: str) -> bool:
+    """
+    发送模板卡片（图文展示型），点击整卡或「查看全部」按钮跳转 HTML 详情页。
+    相比 news 类型，template_card 带明确的跳转按钮，交互更清晰。
+    """
     date: datetime = ctx["date"]
     weekday = "一二三四五六日"[date.weekday()]
-    title = f"📬 每日热梗·{date:%m 月 %d 日} 星期{weekday}"
 
-    # 取前 2 条热梗 + 1 条笑话拼预览
-    preview_parts: list[str] = []
+    # 取头三条作为卡片内预览列表
+    preview_rows: list[dict[str, str]] = []
     for m in ctx["memes"][:2]:
-        preview_parts.append(f"🔥 {m['title']}")
+        preview_rows.append({
+            "keyname": "🔥 热梗",
+            "value": _truncate(m["title"], 20),
+        })
+    if ctx["movies"]:
+        mv = ctx["movies"][0]
+        preview_rows.append({
+            "keyname": "🎬 电影",
+            "value": _truncate(f"《{mv['title']}》 {mv['subtitle']}", 20),
+        })
+    if ctx["travels"]:
+        preview_rows.append({
+            "keyname": "🧳 旅游",
+            "value": _truncate(ctx["travels"][0], 20),
+        })
+
+    quote_text = ""
     if ctx["jokes"]:
-        first_joke = ctx["jokes"][0]
-        if len(first_joke) > 40:
-            first_joke = first_joke[:40] + "…"
-        preview_parts.append(f"😄 {first_joke}")
-    description = "｜".join(preview_parts) or "为你精选今日 10 条资讯，点击查看"
+        quote_text = _truncate(ctx["jokes"][0], 80)
 
     payload = {
-        "msgtype": "news",
-        "news": {
-            "articles": [{
-                "title": title,
-                "description": description,
+        "msgtype": "template_card",
+        "template_card": {
+            "card_type": "news_notice",
+            "source": {
+                "desc": "每日精选 · Daily Digest",
+                "desc_color": 0,
+            },
+            "main_title": {
+                "title": f"📬 今日热梗·{date:%m 月 %d 日} 星期{weekday}",
+                "desc": "为你精选 10 条热梗 / 笑话 / 电影 / 旅游",
+            },
+            "card_image": {
+                "url": ctx["cover"],
+                "aspect_ratio": 2.25,
+            },
+            "horizontal_content_list": preview_rows,
+            "jump_list": [{
+                "type": 1,
                 "url": page_url,
-                "picurl": ctx["cover"],
+                "title": "🔗 查看完整详情",
             }],
+            "card_action": {
+                "type": 1,
+                "url": page_url,
+            },
         },
     }
+    if quote_text:
+        payload["template_card"]["quote_area"] = {
+            "type": 0,
+            "title": "😄 今日份冷笑话",
+            "quote_text": quote_text,
+        }
+
     try:
         resp = http_post_json(WEBHOOK_URL, payload)
     except Exception as exc:
@@ -705,10 +748,14 @@ def send_news_card(ctx: dict[str, Any], page_url: str) -> bool:
         return False
 
     if resp.get("errcode") == 0:
-        log.info("✅ 推送成功（图文卡片 → %s）", page_url)
+        log.info("✅ 推送成功（模板卡片 → %s）", page_url)
         return True
     log.error("❌ 推送失败: %s", resp)
     return False
+
+
+# 保留旧函数名作为别名（兼容）
+send_news_card = send_template_card
 
 
 def send_markdown_fallback(ctx: dict[str, Any]) -> bool:
